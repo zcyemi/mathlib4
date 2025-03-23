@@ -19,6 +19,8 @@ require "leanprover-community" / "importGraph" @ git "main"
 require "leanprover-community" / "LeanSearchClient" @ git "main"
 require "leanprover-community" / "plausible" @ git "main"
 
+require "ast_export" from "../ast_export"
+
 /-!
 ## Options for building mathlib
 -/
