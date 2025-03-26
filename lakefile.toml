@@ -1,0 +1,115 @@
+name = "mathlib"
+testDriver = "MathlibTest"
+defaultTargets = ["Mathlib"]
+
+[[require]]
+name = "batteries"
+scope = "leanprover-community"
+version = "git#main"
+
+[[require]]
+name = "Qq"
+scope = "leanprover-community"
+version = "git#master"
+
+[[require]]
+name = "aesop"
+scope = "leanprover-community"
+version = "git#master"
+
+[[require]]
+name = "proofwidgets"
+scope = "leanprover-community"
+version = "git#v0.0.52"
+options = {errorOnBuild = "ProofWidgets not up-to-date. Please run `lake exe cache get` to fetch the latest ProofWidgets. If this does not work, report your issue on the Lean Zulip."}
+
+[[require]]
+name = "importGraph"
+scope = "leanprover-community"
+version = "git#main"
+
+[[require]]
+name = "LeanSearchClient"
+scope = "leanprover-community"
+version = "git#main"
+
+[[require]]
+name = "plausible"
+scope = "leanprover-community"
+version = "git#main"
+
+[[require]]
+name = "ast_export"
+path = "../ast_export"
+
+[[lean_lib]]
+name = "Mathlib"
+leanOptions = {pp.unicode.fun = true, autoImplicit = false, maxSynthPendingDepth = 3, weak.linter.docPrime = false, weak.linter.hashCommand = true, weak.linter.oldObtain = true, weak.linter.refine = true, weak.linter.style.cdot = true, weak.linter.style.dollarSyntax = true, weak.linter.style.header = true, weak.linter.style.lambdaSyntax = true, weak.linter.style.longLine = true, weak.linter.style.longFile = 1500, weak.linter.style.missingEnd = true, weak.linter.style.multiGoal = true, weak.linter.style.setOption = true}
+moreServerOptions = {linter.docPrime = false, linter.hashCommand = true, linter.oldObtain = true, linter.refine = true, linter.style.cdot = true, linter.style.dollarSyntax = true, linter.style.header = true, linter.style.lambdaSyntax = true, linter.style.longLine = true, linter.style.longFile = 1500, linter.style.missingEnd = true, linter.style.multiGoal = true, linter.style.setOption = true}
+
+[[lean_lib]]
+name = "Cache"
+
+[[lean_lib]]
+name = "LongestPole"
+
+[[lean_lib]]
+name = "MathlibTest"
+globs = ["MathlibTest.+"]
+
+[[lean_lib]]
+name = "Archive"
+leanOptions = {pp.unicode.fun = true, autoImplicit = false, maxSynthPendingDepth = 3, weak.linter.docPrime = false, weak.linter.hashCommand = true, weak.linter.oldObtain = true, weak.linter.refine = true, weak.linter.style.cdot = true, weak.linter.style.dollarSyntax = true, weak.linter.style.header = true, weak.linter.style.lambdaSyntax = true, weak.linter.style.longLine = true, weak.linter.style.longFile = 1500, weak.linter.style.missingEnd = true, weak.linter.style.multiGoal = true, weak.linter.style.setOption = true}
+moreServerOptions = {linter.docPrime = false, linter.hashCommand = true, linter.oldObtain = true, linter.refine = true, linter.style.cdot = true, linter.style.dollarSyntax = true, linter.style.header = true, linter.style.lambdaSyntax = true, linter.style.longLine = true, linter.style.longFile = 1500, linter.style.missingEnd = true, linter.style.multiGoal = true, linter.style.setOption = true}
+
+[[lean_lib]]
+name = "Counterexamples"
+leanOptions = {pp.unicode.fun = true, autoImplicit = false, maxSynthPendingDepth = 3, weak.linter.docPrime = false, weak.linter.hashCommand = true, weak.linter.oldObtain = true, weak.linter.refine = true, weak.linter.style.cdot = true, weak.linter.style.dollarSyntax = true, weak.linter.style.header = true, weak.linter.style.lambdaSyntax = true, weak.linter.style.longLine = true, weak.linter.style.longFile = 1500, weak.linter.style.missingEnd = true, weak.linter.style.multiGoal = true, weak.linter.style.setOption = true}
+moreServerOptions = {linter.docPrime = false, linter.hashCommand = true, linter.oldObtain = true, linter.refine = true, linter.style.cdot = true, linter.style.dollarSyntax = true, linter.style.header = true, linter.style.lambdaSyntax = true, linter.style.longLine = true, linter.style.longFile = 1500, linter.style.missingEnd = true, linter.style.multiGoal = true, linter.style.setOption = true}
+
+[[lean_lib]]
+name = "docs"
+
+[[lean_exe]]
+name = "autolabel"
+srcDir = "scripts"
+
+[[lean_exe]]
+name = "cache"
+root = "Cache.Main"
+
+[[lean_exe]]
+name = "«check-yaml»"
+srcDir = "scripts"
+supportInterpreter = true
+
+[[lean_exe]]
+name = "mk_all"
+srcDir = "scripts"
+supportInterpreter = true
+weakLinkArgs = ["-lLake"]
+
+[[lean_exe]]
+name = "shake"
+root = "Shake.Main"
+supportInterpreter = true
+
+[[lean_exe]]
+name = "«lint-style»"
+srcDir = "scripts"
+
+[[lean_exe]]
+name = "pole"
+root = "LongestPole.Main"
+supportInterpreter = true
+weakLinkArgs = ["-lLake"]
+
+[[lean_exe]]
+name = "unused"
+root = "LongestPole.Unused"
+supportInterpreter = true
+weakLinkArgs = ["-lLake"]
+
+[[lean_exe]]
+name = "mathlib_test_executable"
+root = "MathlibTest.MathlibTestExecutable"
