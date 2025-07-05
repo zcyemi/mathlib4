@@ -169,6 +169,28 @@ lemma altitudeFoot_mem_altitude {n : ℕ} [NeZero n] (s : Simplex ℝ P n) (i : 
   rw [← affineSpan_pair_altitudeFoot_eq_altitude]
   exact left_mem_affineSpan_pair _ _ _
 
+/-- The altitude foot can be computed as the orthogonal projection onto the opposite face
+from any point on the altitude. -/
+theorem altitudeFoot_eq_orthogonalProjection_of_point_mem_altitude {n : ℕ} [NeZero n]
+    (s : Affine.Simplex ℝ P n) (i : Fin (n + 1)) {p : P} (hp : p ∈ s.altitude i):
+    s.altitudeFoot i = (s.faceOpposite i).orthogonalProjectionSpan p := by
+  unfold altitudeFoot orthogonalProjectionSpan
+  simp only [range_faceOpposite_points]
+  set a := affineSpan ℝ (s.points '' {i}ᶜ)
+  have h1 := (s.altitudeFoot_mem_altitude i)
+  have h2 : s.altitudeFoot i ∈ a := altitudeFoot_mem_affineSpan_image_compl s i
+  have h_le : (s.altitude i).direction ≤ (affineSpan ℝ (s.points '' {i}ᶜ)).directionᗮ := by
+    apply Submodule.IsOrtho.le
+    rw [Submodule.isOrtho_comm, direction_affineSpan]
+    exact s.vectorSpan_isOrtho_altitude_direction i
+  have h_vsum_mem : p -ᵥ s.altitudeFoot i ∈ a.directionᗮ := by
+    apply h_le (AffineSubspace.vsub_mem_direction hp h1)
+  have h_vsub_mem' : s.points i -ᵥ s.altitudeFoot i ∈ a.directionᗮ := by
+    apply h_le (AffineSubspace.vsub_mem_direction (s.mem_altitude i) h1)
+  have h3:= orthogonalProjection_vadd_eq_self h2 h_vsum_mem
+  simp only [vsub_vadd, ← orthogonalProjection_vadd_eq_self h2 h_vsub_mem', a] at h3
+  rw [h3]
+
 /-- The height of a vertex of a simplex is the distance between it and the foot of the altitude
 from that vertex. -/
 def height {n : ℕ} [NeZero n] (s : Simplex ℝ P n) (i : Fin (n + 1)) : ℝ :=
