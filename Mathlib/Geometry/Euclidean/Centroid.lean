@@ -130,7 +130,7 @@ theorem centroid_mem_segment_faceOppositeCentroid_points (s : Simplex ℝ P n) (
       rw[smul_eq_mul, div_mul_eq_mul_div, one_mul, div_self];ring_nf;norm_cast;omega]
     simp only [one_smul, vsub_vadd]
 
-theorem wbtw_points_centroid_faceOppositeCentroid (s : Simplex ℝ P n) (i : Fin (n + 1)):
+theorem wbtw_points_centroid_faceOppositeCentroid (s : Simplex ℝ P n) (i : Fin (n + 1)) :
     Wbtw ℝ (s.faceOppositeCentroid i) s.centroid (s.points i) :=
     centroid_mem_segment_faceOppositeCentroid_points s i
 
@@ -166,98 +166,8 @@ theorem eq_centroid_of_forall_mem_median {s : Simplex ℝ P n} {p : P}
 theorem dist_vertex_centroid_eq_n_mul_centroid_face_dist (s : Simplex ℝ P n)
     (i : Fin (n + 1)) :
     dist (s.points i) s.centroid = n * dist s.centroid (s.faceOppositeCentroid i) := by
-<<<<<<< HEAD
   sorry
 
 end Simplex
-
-namespace Triangle
-
-=======
-  have h1 : (n + 1) * dist s.centroid (s.faceOppositeCentroid i) = dist (s.points i) (s.faceOppositeCentroid i) := by
-    rw[dist_eq_norm_vsub, dist_eq_norm_vsub, show ((n:ℝ) + 1) = ((↑(n + 1)):ℝ) by norm_cast , ←Int.norm_natCast]
-    calc
-    _ = ‖((↑(n + 1)):ℝ) • (s.centroid -ᵥ s.faceOppositeCentroid i)‖ := by
-      rw[norm_smul]
-      congr
-    _ = ‖s.points i -ᵥ s.faceOppositeCentroid i‖ := by
-      congr 1
-      rw[points_vsub_faceOppositeCentroid_eq_n_add_one_times_centroid_vsub_faceOppositeCentroid]
-      norm_cast
-  have h2 : dist (s.points i) (s.faceOppositeCentroid i) = dist s.centroid (s.faceOppositeCentroid i) + dist (s.points i) s.centroid := by
-    have h:= wbtw_points_centroid_faceOppositeCentroid s i
-    nth_rw 2 [dist_comm]
-    nth_rw 3 [dist_comm]
-    rw[Wbtw.dist_add_dist]
-    nth_rw 1 [dist_comm]
-    exact h
-  rw [← h1, add_mul, one_mul, add_comm] at h2
-  simp at h2
-  exact id (Eq.symm h2)
-
-
-
-end Simplex
-
-
-namespace Triangle
-
-open Affine Simplex
-
-
->>>>>>> master
-/-- The centroid lies in the affine span of the triangle's vertices. -/
-theorem centroid_mem_affineSpan (t : Triangle ℝ P) :
-    t.centroid ∈ affineSpan ℝ (Set.range t.points) := by
-  unfold Affine.Simplex.centroid
-<<<<<<< HEAD
-  unfold centroid
-=======
-  unfold Finset.centroid
->>>>>>> master
-  simp [affineCombination_mem_affineSpan]
-
-
-
-<<<<<<< HEAD
-=======
-
-
-
-
-
->>>>>>> master
--- /-- The vector from a vertex to the centroid equals one third of the sum of
---     vectors from that vertex to the other two vertices. -/
--- theorem vsub_centroid (t : Triangle ℝ P) (i : Fin 3) :
---   t.points i -ᵥ t.centroid = (1/3 : ℝ) • ((t.points i -ᵥ t.points ((i + 1) % 3)) +
---                                         (t.points i -ᵥ t.points ((i + 2) % 3))) :=
---   sorry
-
--- /-- The centroid is the intersection point of the three medians, and each median
---     is divided by the centroid in a 2:1 ratio (from vertex to opposite side). -/
--- theorem centroid_eq_medians_intersection (t : Triangle ℝ P) :
---   ∃ (t₀ t₁ t₂ : ℝ),
---     t.centroid = t₀ • (midpoint ℝ (t.points 1) (t.points 2) -ᵥ t.points 0) +ᵥ t.points 0 ∧
---     t.centroid = t₁ • (midpoint ℝ (t.points 0) (t.points 2) -ᵥ t.points 1) +ᵥ t.points 1 ∧
---     t.centroid = t₂ • (midpoint ℝ (t.points 0) (t.points 1) -ᵥ t.points 2) +ᵥ t.points 2 :=
---   ⟨2/3, 2/3, 2/3, sorry, sorry, sorry⟩
-
--- /-- The centroid divides each median in a 2:1 ratio (from vertex to opposite side's midpoint). -/
--- theorem centroid_divides_median (t : Triangle ℝ P) (i : Fin 3) :
---   t.centroid = (2/3 : ℝ) • (midpoint ℝ (t.points ((i + 1) % 3)) (t.points ((i + 2) % 3)) -ᵥ t.points i) +ᵥ t.points i :=by
---   sorry
-
--- /-- The centroid can also be expressed as the arithmetic mean of the three vertices. -/
--- theorem centroid_eq_average (t : Triangle ℝ P) :
---   t.centroid = Finset.univ.affineCombination ℝ t.points (Function.const (Fin 3) (1/3 : ℝ)) := by
---   unfold Affine.Simplex.centroid
---   unfold centroid
---   unfold centroidWeights
---   simp
-
-
-
-end Triangle
 
 end Affine
