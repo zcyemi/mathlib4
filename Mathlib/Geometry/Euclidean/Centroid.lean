@@ -31,7 +31,6 @@ variable {n : ℕ}
 
 namespace Simplex
 
-
 abbrev centroid {n : ℕ} (t : Affine.Simplex ℝ P n) : P := Finset.univ.centroid ℝ t.points
 
 theorem centroid_mem_affineSpan {n : ℕ} (s : Simplex ℝ P n) :
@@ -42,6 +41,34 @@ variable [NeZero n]
 
 def faceOppositeCentroid (s : Affine.Simplex ℝ P n) (i : Fin (n + 1)) : P :=
     (s.faceOpposite i).centroid
+
+
+theorem faceOppositeCentroid_eq (s : Affine.Simplex ℝ P n) (i : Fin (n + 1)) :
+    s.faceOppositeCentroid i = ((affineCombination ℝ {i}ᶜ s.points) fun _ ↦ (↑n)⁻¹) := by
+  unfold faceOppositeCentroid
+
+  have : s.faceOpposite i = s.face (fs := {i}ᶜ) (by simp [card_compl, NeZero.one_le]) := by
+    rfl
+  rw [this]
+  unfold centroid
+  rw [face_centroid_eq_centroid]
+  rw [centroid_def]
+  rw [centroidWeights_eq_const]
+  rw [card_compl]
+  simp
+  rfl
+
+theorem faceOppositeCentroid_vsub_faceOppositeCentroid (s : Affine.Simplex ℝ P n)
+    (i j : Fin (n + 1)) (hij : i ≠ j) :
+    s.faceOppositeCentroid i -ᵥ s.faceOppositeCentroid j =
+    ((1:ℝ) / n) • (s.points j -ᵥ s.points i) := by
+  rw [faceOppositeCentroid_eq, faceOppositeCentroid_eq]
+
+  rw [affineCombination_eq_weightedVSubOfPoint_vadd_of_sum_eq_one _ _ _
+      (by simp [sum_const,card_compl]) (s.points i)]
+  rw [affineCombination_eq_weightedVSubOfPoint_vadd_of_sum_eq_one _ _ _
+      (by simp [sum_const,card_compl]) (s.points i)]
+  sorry
 
 theorem faceOppositeCentroid_mem_affineSpan (s : Simplex ℝ P n) (i : Fin (n + 1)) :
     s.faceOppositeCentroid i ∈ affineSpan ℝ (Set.range s.points) := by
@@ -76,14 +103,37 @@ theorem faceOppositeCentroid_vsub_point_eq_smul_faceOppositeCentroid_vsub_centro
   simp only [Finset.centroid]
   sorry
 
+theorem points_vsub_faceOppositeCentroid_eq_n_add_one_times_centroid_vsub_faceOppositeCentroid
+    (s : Simplex ℝ P n) (i : Fin (n + 1)) :
+    s.points i -ᵥ s.faceOppositeCentroid i = ((n + 1):ℝ) • (s.centroid -ᵥ s.faceOppositeCentroid i)
+      := by
+  rw [Simplex.centroid, Finset.centroid_def]
+  sorry
 
 theorem centroid_mem_segment_faceOppositeCentroid_points (s : Simplex ℝ P n) (i : Fin (n + 1)) :
    s.centroid ∈ affineSegment ℝ (s.faceOppositeCentroid i) (s.points i) := by
-  sorry
+  unfold affineSegment
+  simp
+  use ((1/(n + 1)):ℝ)
+  constructor
+  · constructor
+    · refine one_div_nonneg.mpr ?_
+      norm_cast
+      omega
+    · refine div_le_self ?_ ?_
+      simp
+      norm_cast
+      omega
+  · rw [AffineMap.lineMap_apply]
+    rw [points_vsub_faceOppositeCentroid_eq_n_add_one_times_centroid_vsub_faceOppositeCentroid]
+    rw [← smul_assoc, show (1 / ((n:ℝ) + 1)) • ((n:ℝ) + 1) = 1 by
+      rw[smul_eq_mul, div_mul_eq_mul_div, one_mul, div_self];ring_nf;norm_cast;omega]
+    simp only [one_smul, vsub_vadd]
 
 theorem wbtw_points_centroid_faceOppositeCentroid (s : Simplex ℝ P n) (i : Fin (n + 1)):
     Wbtw ℝ (s.faceOppositeCentroid i) s.centroid (s.points i) :=
     centroid_mem_segment_faceOppositeCentroid_points s i
+
 
 
 theorem centroid_mem_median (s : Simplex ℝ P n) (i : Fin (n + 1)) :
@@ -116,21 +166,67 @@ theorem eq_centroid_of_forall_mem_median {s : Simplex ℝ P n} {p : P}
 theorem dist_vertex_centroid_eq_n_mul_centroid_face_dist (s : Simplex ℝ P n)
     (i : Fin (n + 1)) :
     dist (s.points i) s.centroid = n * dist s.centroid (s.faceOppositeCentroid i) := by
+<<<<<<< HEAD
   sorry
 
 end Simplex
 
 namespace Triangle
 
+=======
+  have h1 : (n + 1) * dist s.centroid (s.faceOppositeCentroid i) = dist (s.points i) (s.faceOppositeCentroid i) := by
+    rw[dist_eq_norm_vsub, dist_eq_norm_vsub, show ((n:ℝ) + 1) = ((↑(n + 1)):ℝ) by norm_cast , ←Int.norm_natCast]
+    calc
+    _ = ‖((↑(n + 1)):ℝ) • (s.centroid -ᵥ s.faceOppositeCentroid i)‖ := by
+      rw[norm_smul]
+      congr
+    _ = ‖s.points i -ᵥ s.faceOppositeCentroid i‖ := by
+      congr 1
+      rw[points_vsub_faceOppositeCentroid_eq_n_add_one_times_centroid_vsub_faceOppositeCentroid]
+      norm_cast
+  have h2 : dist (s.points i) (s.faceOppositeCentroid i) = dist s.centroid (s.faceOppositeCentroid i) + dist (s.points i) s.centroid := by
+    have h:= wbtw_points_centroid_faceOppositeCentroid s i
+    nth_rw 2 [dist_comm]
+    nth_rw 3 [dist_comm]
+    rw[Wbtw.dist_add_dist]
+    nth_rw 1 [dist_comm]
+    exact h
+  rw [← h1, add_mul, one_mul, add_comm] at h2
+  simp at h2
+  exact id (Eq.symm h2)
+
+
+
+end Simplex
+
+
+namespace Triangle
+
+open Affine Simplex
+
+
+>>>>>>> master
 /-- The centroid lies in the affine span of the triangle's vertices. -/
 theorem centroid_mem_affineSpan (t : Triangle ℝ P) :
     t.centroid ∈ affineSpan ℝ (Set.range t.points) := by
   unfold Affine.Simplex.centroid
+<<<<<<< HEAD
   unfold centroid
+=======
+  unfold Finset.centroid
+>>>>>>> master
   simp [affineCombination_mem_affineSpan]
 
 
 
+<<<<<<< HEAD
+=======
+
+
+
+
+
+>>>>>>> master
 -- /-- The vector from a vertex to the centroid equals one third of the sum of
 --     vectors from that vertex to the other two vertices. -/
 -- theorem vsub_centroid (t : Triangle ℝ P) (i : Fin 3) :
