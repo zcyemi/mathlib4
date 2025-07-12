@@ -94,13 +94,11 @@ open Affine AffineSubspace Module EuclideanGeometry Simplex Finset
 variable {V : Type*} {P : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [MetricSpace P]
   [NormedAddTorsor V P]
 
-
 abbrev ninePointCircle (t : Triangle ℝ P) : Sphere P :=
   t.medialSimplexCircumsphere
 
 abbrev ninePointCirclecenter (t : Triangle ℝ P) : P :=
   t.medialSimplexCircumcenter
-
 
 theorem ninePointCircumcenter_eq_midpoint (t : Triangle ℝ P) :
     t.ninePointCirclecenter = midpoint ℝ t.circumcenter t.orthocenter := by
@@ -139,16 +137,22 @@ theorem midpoint_vertex_orthocenter_mem_ninePointCircle (t : Triangle ℝ P) (i 
   rw [←h]
   exact t.pointLineMapOfMongePointVertex_mem_medialSimplexSphere i
 
+theorem pointOfMongePointVertex_mem_altitude (t : Triangle ℝ P) (i : Fin 3) :
+    t.pointOfMongePointVertex i ∈ t.altitude i := by
+  apply t.affineSpan_orthocenter_point_le_altitude i
+  rw [orthocenter]
+  unfold pointOfMongePointVertex
+  exact AffineMap.lineMap_mem _ (mem_affineSpan ℝ (by simp)) (mem_affineSpan ℝ (by simp))
+
 /-- Altitude foot is the orthogonal projection of the `pointOfMongePointVertex` on the opposite
 edge, on triangle (Simplex dimension 2), the mongePoint is the orthocenter, so the line mongePoint
 to vertex is the altitude, and the foot of the altitude is the orthogonal projection of the vertex
 and `pointOfMongePointVertex`. -/
 theorem altitude_foot_mem_ninePointCircle (t : Triangle ℝ P) (i : Fin 3) :
     t.altitudeFoot i ∈ t.ninePointCircle := by
-  have h : ↑(orthogonalProjection (affineSpan ℝ (t.points '' {i}ᶜ)) (t.pointOfMongePointVertex i))
-    = t.altitudeFoot i := by
-    sorry
-  rw [← h]
+  rw [altitudeFoot_eq_orthogonalProjection_of_point_mem_altitude t i
+    (t.pointOfMongePointVertex_mem_altitude i)]
+  simp only [orthogonalProjectionSpan, range_faceOpposite_points]
   exact t.pointOfMongePointVertex_orthogonalProjection_mem_medialSimplexSphere i
 
 end Triangle

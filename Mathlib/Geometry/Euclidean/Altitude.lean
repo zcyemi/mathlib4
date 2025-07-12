@@ -172,7 +172,7 @@ lemma altitudeFoot_mem_altitude {n : ℕ} [NeZero n] (s : Simplex ℝ P n) (i : 
 /-- The altitude foot can be computed as the orthogonal projection onto the opposite face
 from any point on the altitude. -/
 theorem altitudeFoot_eq_orthogonalProjection_of_point_mem_altitude {n : ℕ} [NeZero n]
-    (s : Affine.Simplex ℝ P n) (i : Fin (n + 1)) {p : P} (hp : p ∈ s.altitude i):
+    (s : Affine.Simplex ℝ P n) (i : Fin (n + 1)) {p : P} (hp : p ∈ s.altitude i) :
     s.altitudeFoot i = (s.faceOpposite i).orthogonalProjectionSpan p := by
   unfold altitudeFoot orthogonalProjectionSpan
   simp only [range_faceOpposite_points]
