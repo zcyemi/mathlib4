@@ -23,11 +23,40 @@ variable {V : Type*} {P : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V
 
 variable {n : ℕ} [NeZero n]
 
+lemma faceOppositeCentroid_indepdent (s : Affine.Simplex ℝ P n)
+    {spoints : Fin (n + 1) → P} (hs : spoints = (fun i => s.faceOppositeCentroid i)) :
+    AffineIndependent ℝ spoints := by
+  rw [affineIndependent_iff_linearIndependent_vsub ℝ spoints 0, hs]
+  simp only [ne_eq]
+  have h : LinearIndependent ℝ fun (i : { x // x ≠ 0 }) ↦ ((1:ℝ) / n) •
+      (s.points 0 -ᵥ s.points i.val) := by
+    have hx := s.independent
+    rw [affineIndependent_iff_linearIndependent_vsub ℝ _ 0] at hx
+    let f : V →ₗ[ℝ] V := (-((1:ℝ) / n)) • LinearMap.id
+    have hmap := hx.map' f (by rw [LinearMap.ker_smul _ _
+        (by simp [NeZero.ne n]), LinearMap.ker_id])
+    convert hmap with x
+    simp only [f, one_div, ne_eq, neg_smul, Function.comp_apply, LinearMap.neg_apply,
+      LinearMap.smul_apply, LinearMap.id_coe, id_eq]
+    rw [←neg_vsub_eq_vsub_rev, smul_neg]
+  grind [faceOppositeCentroid_vsub_faceOppositeCentroid]
+
+
 def medialSimplex (s : Affine.Simplex ℝ P n) : Affine.Simplex ℝ P n :=
   let spoints := (fun i => s.faceOppositeCentroid i)
-  have indep : AffineIndependent ℝ spoints := by
-    sorry
-  ⟨spoints, indep⟩
+  ⟨spoints, faceOppositeCentroid_indepdent s rfl⟩
+
+
+
+theorem medialSimplex_centroid_eq_centroid (s : Affine.Simplex ℝ P n) :
+    s.medialSimplex.centroid = s.centroid := by
+  unfold medialSimplex
+  unfold centroid
+  simp
+
+  sorry
+
+
 
 def medialSimplexCircumsphere (s : Affine.Simplex ℝ P n) : Sphere P :=
   s.medialSimplex.circumsphere
@@ -39,7 +68,9 @@ def medialSimplexCircumcenter (s : Affine.Simplex ℝ P n) : P :=
 theorem medialSimplexCircumcenter_eq_lineMap_mongePoint_circumcenter (s : Affine.Simplex ℝ P n) :
     s.medialSimplexCircumcenter =
     AffineMap.lineMap (s.mongePoint) (s.circumcenter) ((1:ℝ) / n) := by
-  sorry
+  rw [AffineMap.lineMap_apply]
+
+
 
 theorem medialSimplexCircumcenter_eq_lineMap_circumcenter_centroid (s : Affine.Simplex ℝ P n) :
     s.medialSimplexCircumcenter = AffineMap.lineMap (s.circumcenter) (s.centroid) (n+1:ℝ) := by
