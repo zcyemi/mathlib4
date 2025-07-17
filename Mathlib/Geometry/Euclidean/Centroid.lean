@@ -54,8 +54,6 @@ variable [NeZero n]
 def faceOppositeCentroid (s : Affine.Simplex k P n) (i : Fin (n + 1)) : P :=
     (s.faceOpposite i).centroid
 
-
-
 theorem faceOppositeCentroid_mem_affineSpan (s : Simplex k P n) (i : Fin (n + 1)) :
     s.faceOppositeCentroid i ∈ affineSpan k (Set.range s.points) := by
   unfold faceOppositeCentroid
@@ -67,7 +65,7 @@ theorem faceOppositeCentroid_mem_affineSpan (s : Simplex k P n) (i : Fin (n + 1)
   exact centroid_mem_affineSpan (s.faceOpposite i)
 
 
-theorem faceOppositeCentroid_eq (s : Affine.Simplex k P n) (i : Fin (n + 1)) :
+theorem faceOppositeCentroid_eq_affineCombination (s : Affine.Simplex k P n) (i : Fin (n + 1)) :
     s.faceOppositeCentroid i = ((affineCombination k {i}ᶜ s.points) fun _ ↦ (↑n)⁻¹) := by
   unfold faceOppositeCentroid
   have : s.faceOpposite i = s.face (fs := {i}ᶜ) (by simp [card_compl, NeZero.one_le]) := by rfl
@@ -79,17 +77,17 @@ theorem faceOppositeCentroid_eq (s : Affine.Simplex k P n) (i : Fin (n + 1)) :
 
 theorem faceOppositeCentroid_vsub_point (s : Affine.Simplex k P n) (i : Fin (n + 1)) :
     s.faceOppositeCentroid i -ᵥ (s.points i) = (n : k)⁻¹ • ∑ x, (s.points x -ᵥ s.points i) := by
-  rw [faceOppositeCentroid_eq]
+  rw [faceOppositeCentroid_eq_affineCombination]
   rw [affineCombination_eq_weightedVSubOfPoint_vadd_of_sum_eq_one _ _ _
     ?_ (s.points i)]
-  simp only [weightedVSubOfPoint_apply, vadd_vsub]
-  have h (i: Fin (n+1)) : ∑ i_1 ∈ {i}ᶜ, (n:k)⁻¹ • (s.points i_1 -ᵥ s.points i) =
-    ∑ i_1 : (Fin (n + 1)) , ((n:k)⁻¹ • (s.points i_1 -ᵥ s.points i)) :=by
-    rw [←Finset.sum_compl_add_sum {i}]
-    simp
-  rw [h i]
-  field_simp
-  rw [smul_sum]
+  · simp only [weightedVSubOfPoint_apply, vadd_vsub]
+    have h (i: Fin (n+1)) : ∑ i_1 ∈ {i}ᶜ, (n:k)⁻¹ • (s.points i_1 -ᵥ s.points i) =
+      ∑ i_1 : (Fin (n + 1)) , ((n:k)⁻¹ • (s.points i_1 -ᵥ s.points i)) :=by
+      rw [←Finset.sum_compl_add_sum {i}]
+      simp
+    rw [h i]
+    field_simp
+    rw [smul_sum]
   simp [sum_const,card_compl]
   field_simp
   rw [div_self]
@@ -141,23 +139,40 @@ theorem faceOppositeCentroid_vsub_faceOppositeCentroid (s : Affine.Simplex k P n
     rw [one_div]
   rw [this,smul_smul,inv_eq_one_div,one_div_mul_cancel (NeZero.ne (n:k)), one_smul]
 
-
 theorem faceOppositeCentroid_vsub_centroid (s : Simplex k P n) (i : Fin (n + 1)) :
-    s.faceOppositeCentroid i -ᵥ s.centroid = ((1 : k) / (n + 1)) • (s.faceOppositeCentroid i -ᵥ s.points i) := by
-  rw [← vsub_sub_vsub_cancel_right _ _ (s.points i)]
-  rw [faceOppositeCentroid_vsub_point]
-  rw [centroid_vsub_point]
-  rw [←sub_smul]
-  field_simp
-  rw [smul_smul]
+    ((n + 1) : k) • (s.faceOppositeCentroid i -ᵥ s.centroid) =
+    s.faceOppositeCentroid i -ᵥ s.points i := by
+  rw [← vsub_sub_vsub_cancel_right _ _ (s.points i), faceOppositeCentroid_vsub_point,
+    centroid_vsub_point, ← sub_smul, smul_smul]
   congr
-  field_simp [add_div,mul_comm]
+  field_simp [mul_sub]
+  rw [add_div, one_div, div_self (NeZero.ne (n : k)), div_self (by norm_cast)]
+  norm_num
 
-/-- -/
-theorem point_vsub_centroid_eq_smul_centroid_vsub_faceOppositeCentroid (s : Simplex k P n)
+/-- Commandino's theorem -/
+theorem smul_centroid_vsub_faceOppositeCentroid_eq_point_vsub_centroid_eq (s : Simplex k P n)
     (i : Fin (n + 1)) :
-    s.points i -ᵥ s.centroid = (n : k) • (s.centroid -ᵥ s.faceOppositeCentroid i) := by
-  sorry
+    (n : k) • (s.centroid -ᵥ s.faceOppositeCentroid i) = s.points i -ᵥ s.centroid := by
+  rw [← vsub_sub_vsub_cancel_right _ _ (s.points i), faceOppositeCentroid_vsub_point,
+    centroid_vsub_point, ← neg_vsub_eq_vsub_rev, centroid_vsub_point, ← sub_smul, smul_smul,
+    ← neg_smul]
+  congr
+  simp_rw [mul_sub, sub_eq_iff_eq_add, neg_add_eq_sub]
+  symm
+  field_simp [sub_eq_iff_eq_add, NeZero.ne (n : k)]
+  rw [div_self (by norm_cast)]
+
+
+/-- The centroid, a vertex, and the corresponding faceOppositeCentroid of a simplex are collinear.
+-/
+theorem collinear_point_centroid_faceOppositeCentroid (s : Simplex k P n) (i : Fin (n + 1)) :
+    Collinear k {s.points i, s.centroid, s.faceOppositeCentroid i} := by
+  apply collinear_insert_of_mem_affineSpan_pair
+  have h : s.points i = (-n : k) • (s.faceOppositeCentroid i -ᵥ s.centroid) +ᵥ s.centroid := by
+    rw [← neg_vsub_eq_vsub_rev, neg_smul_neg,
+      smul_centroid_vsub_faceOppositeCentroid_eq_point_vsub_centroid_eq, vsub_vadd]
+  rw [h]
+  exact smul_vsub_vadd_mem_affineSpan_pair _ _ _
 
 
 section median
@@ -176,83 +191,19 @@ theorem point_mem_median (s : Simplex k P n) (i : Fin (n + 1)) :
     s.points i ∈ s.median i := by
   simp [median, left_mem_affineSpan_pair]
 
-
-end median
-
-theorem faceOppositeCentroid_vsub_point_eq_smul_faceOppositeCentroid_vsub_centroid
-    (s : Simplex k P n) (i : Fin (n + 1)) :
-      s.faceOppositeCentroid i -ᵥ s.points i =
-      ((n + 1):k) • (s.faceOppositeCentroid i -ᵥ s.centroid) := by
-  symm
-  rw [← vsub_sub_vsub_cancel_right _ _ (s.points i)]
-  unfold faceOppositeCentroid centroid
-  simp only [Finset.centroid]
-  sorry
-
-theorem points_vsub_faceOppositeCentroid_eq_n_add_one_times_centroid_vsub_faceOppositeCentroid
-    (s : Simplex k P n) (i : Fin (n + 1)) :
-    s.points i -ᵥ s.faceOppositeCentroid i = ((n + 1):k) • (s.centroid -ᵥ s.faceOppositeCentroid i)
-      := by
-  rw [Simplex.centroid, Finset.centroid_def]
-  sorry
-
-theorem centroid_mem_segment_faceOppositeCentroid_points (s : Simplex k P n) (i : Fin (n + 1)) :
-   s.centroid ∈ affineSegment k (s.faceOppositeCentroid i) (s.points i) := by
-  unfold affineSegment
-  simp
-  use ((1/(n + 1)):k)
-  constructor
-  · constructor
-    · refine one_div_nonneg.mpr ?_
-      norm_cast
-      omega
-    · refine div_le_self ?_ ?_
-      simp
-      norm_cast
-      omega
-  · rw [AffineMap.lineMap_apply]
-    rw [points_vsub_faceOppositeCentroid_eq_n_add_one_times_centroid_vsub_faceOppositeCentroid]
-    rw [← smul_assoc, show (1 / ((n:k) + 1)) • ((n:k) + 1) = 1 by
-      rw[smul_eq_mul, div_mul_eq_mul_div, one_mul, div_self];ring_nf;norm_cast;omega]
-    simp only [one_smul, vsub_vadd]
-
-theorem wbtw_points_centroid_faceOppositeCentroid (s : Simplex k P n) (i : Fin (n + 1)) :
-    Wbtw k (s.faceOppositeCentroid i) s.centroid (s.points i) :=
-    centroid_mem_segment_faceOppositeCentroid_points s i
-
-
-
 theorem centroid_mem_median (s : Simplex k P n) (i : Fin (n + 1)) :
   s.centroid ∈ s.median i := by
   rw [median]
-  have h := centroid_mem_segment_faceOppositeCentroid_points s i
-  refine Wbtw.mem_affineSpan ?_
-  exact Wbtw.symm h
-
-theorem medians_concurrent (s : Simplex k P n) :
-    ∀ i : Fin (n + 1), s.centroid ∈ s.median i := by
-  simp [centroid_mem_median]
-
-
-theorem eq_centroid_of_forall_mem_median {s : Simplex k P n} {p : P}
-    (h : ∀ i, p ∈ s.median i) : p = s.centroid := by
-  -- intersect medians at i = 0 and i = 1 to pin down the centroid
-  have h0 := h 0
-  have h1 := h 1
-  by_cases h01 : (0 : Fin (n + 1)) = 1
-  · absurd h01
-    simp
-  · have hc := medians_concurrent s
-    have hc0 := hc 0
-    have hc1 := hc 1
-    by_contra hne
-
-    sorry
-
-theorem dist_vertex_centroid_eq_n_mul_centroid_face_dist (s : Simplex k P n)
-    (i : Fin (n + 1)) :
-    dist (s.points i) s.centroid = n * dist s.centroid (s.faceOppositeCentroid i) := by
   sorry
+
+theorem eq_centroid_of_forall_mem_median {s : Simplex k P n} {p : P} (h : ∀ i, p ∈ s.median i) :
+    p = s.centroid := by
+  rw [← @vsub_eq_zero_iff_eq V]
+  sorry
+
+
+end median
+
 
 end Simplex
 
