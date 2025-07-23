@@ -260,6 +260,31 @@ theorem centroid_mem_median [CharZero k] (s : Simplex k P n) (i : Fin (n + 1)) :
   rw [h]
   apply smul_vsub_vadd_mem_affineSpan_pair
 
+theorem mem_median_eq_linemap [CharZero k] (s : Simplex k P n) (i : Fin (n + 1))
+    {p : P} (h : p ∈ s.median i) :
+    ∃ (r : k),
+    p = AffineMap.lineMap (s.faceOppositeCentroid i) (s.points i) r := by
+  rw [median] at h
+  set v := p -ᵥ s.faceOppositeCentroid i
+  have hp: p = v +ᵥ s.faceOppositeCentroid i := by rw [vsub_vadd]
+  rw [hp] at h
+
+  rw [vadd_right_mem_affineSpan_pair] at h
+  choose r hr using h
+  use r
+  rw [AffineMap.lineMap_apply]
+  rw [hr]
+  simp_rw [hp]
+
+
+theorem mem_median_eq_smul_vsub_vadd [CharZero k] (s : Simplex k P n) (i : Fin (n + 1))
+    {p : P} (h : p ∈ s.median i) :
+    ∃ (r : k), p = r • (s.faceOppositeCentroid i -ᵥ s.points i) +ᵥ s.points i := by
+  rw [median] at h
+  sorry
+
+
+
 -- theorem mem_median_exist_vsub [CharZero k] (s : Simplex k P n) (i : Fin (n + 1))
 --     {p : P} (h : p ∈ s.median i) :
 --     ∃ (r : k),  s.points i -ᵥ p = r • (s.centroid -ᵥ s.points i) := by
@@ -270,6 +295,7 @@ theorem eq_centroid_of_forall_mem_median [CharZero k] (s : Simplex k P n) {p : P
     (h : ∀ i, p ∈ s.median i) :
     p = s.centroid := by
   rw [centroid_iff_sum_vsub_eq_zero]
+
 
 
   sorry
