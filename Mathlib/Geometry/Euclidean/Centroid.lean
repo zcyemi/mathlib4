@@ -221,9 +221,13 @@ theorem centroid_vsub_point_eq_smul_vsub [CharZero k]
   rw [← neg_vsub_eq_vsub_rev, point_vsub_centroid_eq_smul_vsub, ← neg_smul_neg,
     neg_vsub_eq_vsub_rev, ← neg_smul, neg_neg]
 
-theorem centroid_eq_smul_vsub_vadd [CharZero k] (s : Simplex k P n) (i : Fin (n + 1)) :
+theorem centroid_eq_smul_vsub_vadd_point [CharZero k] (s : Simplex k P n) (i : Fin (n + 1)) :
     s.centroid = (n : k) • (s.faceOppositeCentroid i -ᵥ s.centroid) +ᵥ s.points i := by
   rw [← centroid_vsub_point_eq_smul_vsub, vsub_vadd]
+
+theorem point_eq_smul_vsub_vadd_centroid [CharZero k] (s : Simplex k P n) (i : Fin (n + 1)) :
+    s.points i = (-n : k) • (s.faceOppositeCentroid i -ᵥ s.centroid) +ᵥ s.centroid := by
+  rw [← neg_vsub_eq_vsub_rev, neg_smul_neg, ← point_vsub_centroid_eq_smul_vsub, vsub_vadd]
 
 /-- The centroid, a vertex, and the corresponding faceOppositeCentroid of a simplex are collinear.
 -/
@@ -231,10 +235,7 @@ theorem collinear_point_centroid_faceOppositeCentroid [CharZero k] (s : Simplex 
     (i : Fin (n + 1)) :
     Collinear k {s.points i, s.centroid, s.faceOppositeCentroid i} := by
   apply collinear_insert_of_mem_affineSpan_pair
-  have h : s.points i = (-n : k) • (s.faceOppositeCentroid i -ᵥ s.centroid) +ᵥ s.centroid := by
-    rw [← neg_vsub_eq_vsub_rev, neg_smul_neg,
-      ← point_vsub_centroid_eq_smul_vsub, vsub_vadd]
-  rw [h]
+  rw [point_eq_smul_vsub_vadd_centroid]
   exact smul_vsub_vadd_mem_affineSpan_pair _ _ _
 
 /-- Define median as an line throught the point of simplex and corosponed faceOppositeCentroid. -/
@@ -258,7 +259,28 @@ theorem centroid_mem_median [CharZero k] (s : Simplex k P n) (i : Fin (n + 1)) :
       faceOppositeCentroid_vsub_point_eq_smul_vsub, smul_smul,one_div,mul_assoc,
       inv_mul_cancel₀ (by norm_cast), mul_one]
   rw [h]
-  apply smul_vsub_vadd_mem_affineSpan_pair
+  exact smul_vsub_vadd_mem_affineSpan_pair _ _ _
+
+theorem median_eq_affineSpan_point_centroid [CharZero k] (s : Simplex k P n) (i : Fin (n + 1)) :
+    s.median i = affineSpan k {s.points i, s.centroid} := by
+  have h1 : s.median i ≤ affineSpan k {s.points i, s.centroid} := by
+    unfold median
+    apply affineSpan_pair_le_of_right_mem
+    have h : s.faceOppositeCentroid i = (-1 / (n:k)) • (s.points i -ᵥ s.centroid) +ᵥ s.centroid
+        := by
+      rw[point_eq_smul_vsub_vadd_centroid, vadd_vsub, smul_smul]
+      field_simp
+      rw [div_mul_cancel₀ _ (NeZero.ne (n:k)), neg_one_smul,neg_neg, vsub_vadd]
+    rw [h]
+    exact smul_vsub_rev_vadd_mem_affineSpan_pair _ _ _
+  have h2 : affineSpan k {s.points i, s.centroid} ≤ s.median i := by
+    rw [median]
+    apply affineSpan_pair_le_of_right_mem
+    exact centroid_mem_median s i
+  exact le_antisymm h1 h2
+
+
+
 
 theorem mem_median_eq_linemap [CharZero k] (s : Simplex k P n) (i : Fin (n + 1))
     {p : P} (h : p ∈ s.median i) :
@@ -280,9 +302,60 @@ theorem mem_median_eq_linemap [CharZero k] (s : Simplex k P n) (i : Fin (n + 1))
 theorem mem_median_eq_smul_vsub_vadd [CharZero k] (s : Simplex k P n) (i : Fin (n + 1))
     {p : P} (h : p ∈ s.median i) :
     ∃ (r : k), p = r • (s.faceOppositeCentroid i -ᵥ s.points i) +ᵥ s.points i := by
-  rw [median] at h
+  rw [median_eq_affineSpan_point_centroid] at h
+
+
   sorry
 
+open Function
+
+variable {ι : Type*}
+
+theorem linearIndepdent_point_vsub_centroid [CharZero k] (s : Simplex k P n) :
+  LinearIndependent k (fun i => s.points i -ᵥ s.centroid) := by
+  -- 展开线性无关的定义
+  rw [linearIndependent_iff']
+
+  intro fs g hg i hi
+
+
+  -- exact s.independent fs g
+  sorry
+
+
+
+theorem affineIndependent_iff_linearIndependent_vsub' (p : ι → P) (i1 : ι) :
+    AffineIndependent k p → LinearIndependent k fun i : { x // x ≠ i1 } => (p i -ᵥ p i1 : V) := by
+  classical
+    intro h
+    rw [linearIndependent_iff']
+    intro s g hg i hi
+    set f : ι → k := fun x => if hx : x = i1 then -∑ y ∈ s, g y else g ⟨x, hx⟩ with hfdef
+    let s2 : Finset ι := insert i1 (s.map (Embedding.subtype _))
+    have hfg : ∀ x : { x // x ≠ i1 }, g x = f x := by grind
+    rw [hfg]
+    have hf : ∑ ι ∈ s2, f ι = 0 := by
+      rw [Finset.sum_insert
+          (Finset.notMem_map_subtype_of_not_property s (Classical.not_not.2 rfl)),
+        Finset.sum_subtype_map_embedding fun x _ => (hfg x).symm]
+      rw [hfdef]
+      dsimp only
+      rw [dif_pos rfl]
+      exact neg_add_cancel _
+
+    have hs2 : s2.weightedVSub p f = (0 : V) := by
+      set f2 : ι → V := fun x => f x • (p x -ᵥ p i1) with hf2def
+      set g2 : { x // x ≠ i1 } → V := fun x => g x • (p x -ᵥ p i1)
+      have hf2g2 : ∀ x : { x // x ≠ i1 }, f2 x = g2 x := by
+        simp only [g2, hf2def]
+        refine fun x => ?_
+        rw [hfg]
+      rw [Finset.weightedVSub_eq_weightedVSubOfPoint_of_sum_eq_zero s2 f p hf (p i1),
+        Finset.weightedVSubOfPoint_insert, Finset.weightedVSubOfPoint_apply,
+        Finset.sum_subtype_map_embedding fun x _ => hf2g2 x]
+      exact hg
+
+    exact h s2 f hf hs2 i (Finset.mem_insert_of_mem (Finset.mem_map.2 ⟨i, hi, rfl⟩))
 
 
 -- theorem mem_median_exist_vsub [CharZero k] (s : Simplex k P n) (i : Fin (n + 1))
@@ -291,14 +364,64 @@ theorem mem_median_eq_smul_vsub_vadd [CharZero k] (s : Simplex k P n) (i : Fin (
 --     sorry
 
 /-- The medians of a simplex are concurrent at the centroid of the simplex -/
-theorem eq_centroid_of_forall_mem_median [CharZero k] (s : Simplex k P n) {p : P}
+theorem eq_centroid_of_forall_mem_median [CharZero k] (s : Simplex k P n) {hn : 2 ≤ n} {p : P}
     (h : ∀ i, p ∈ s.median i) :
     p = s.centroid := by
-  rw [centroid_iff_sum_vsub_eq_zero]
+
+  rw [←vsub_eq_zero_iff_eq]
+
+  set v := p -ᵥ s.centroid
+  have hp : p = v +ᵥ s.centroid := by rw [vsub_vadd]
+  conv at h =>
+    intro i
+    rw [median_eq_affineSpan_point_centroid]
+    rw [hp]
+    rw [vadd_right_mem_affineSpan_pair]
+
+  let u : Fin (n + 1) → V := fun i => s.points i -ᵥ s.centroid
+  have h_span : ∀ i, v ∈ (Submodule.span k ({u i} : Set V)) := by
+    intro i
+    unfold u
+    unfold v
+    sorry
+
+  have hi : LinearIndependent k u :=by
+    sorry
+
+  have he : ∃ i j : Fin (n + 1), i ≠ j := by
+    use 0 , 1
+    norm_num
+  choose i j hij using he
+
+  have h_ij : Disjoint ({i}: Set (Fin (n+1))) {j} := by
+    simp [hij]
+
+  set u_i := Submodule.span k ({u i} : Set V)
+  set u_j := Submodule.span k ({u j} : Set V)
+  have h_disjoint : Disjoint u_i u_j := by
+    have x:= LinearIndependent.disjoint_span_image hi h_ij
+    simp at x
+    exact x
+
+
+  have h_vi : v ∈ u_i := by
+    apply h_span
+  have h_vj : v ∈ u_j := by
+    apply h_span
+
+  exact Submodule.disjoint_def.1 h_disjoint _ h_vi h_vj
 
 
 
-  sorry
+
+
+
+
+
+
+
+  -- rw [centroid_iff_sum_vsub_eq_zero]
+
 
 
 
