@@ -279,9 +279,6 @@ theorem median_eq_affineSpan_point_centroid [CharZero k] (s : Simplex k P n) (i 
     exact centroid_mem_median s i
   exact le_antisymm h1 h2
 
-
-
-
 theorem mem_median_eq_linemap [CharZero k] (s : Simplex k P n) (i : Fin (n + 1))
     {p : P} (h : p ∈ s.median i) :
     ∃ (r : k),
@@ -299,132 +296,103 @@ theorem mem_median_eq_linemap [CharZero k] (s : Simplex k P n) (i : Fin (n + 1))
   simp_rw [hp]
 
 
-theorem mem_median_eq_smul_vsub_vadd [CharZero k] (s : Simplex k P n) (i : Fin (n + 1))
-    {p : P} (h : p ∈ s.median i) :
-    ∃ (r : k), p = r • (s.faceOppositeCentroid i -ᵥ s.points i) +ᵥ s.points i := by
-  rw [median_eq_affineSpan_point_centroid] at h
-
-
-  sorry
-
 open Function
 
 variable {ι : Type*}
 
-theorem linearIndepdent_point_vsub_centroid [CharZero k] (s : Simplex k P n) :
-  LinearIndependent k (fun i => s.points i -ᵥ s.centroid) := by
-  -- 展开线性无关的定义
-  rw [linearIndependent_iff']
+theorem centroid_not_mem_affineSpan_compl (s : Simplex k P n) (i : Fin (n + 1)) :
+    s.centroid ∉ affineSpan k (s.points '' {i}ᶜ) := by
+  intro h
+  rw [←range_faceOpposite_points] at h
 
-  intro fs g hg i hi
+  let p := (s.faceOpposite i).points
+  have h1:= (mem_affineSpan_iff_eq_affineCombination k V).mp h
+  choose s1 w hw hs using h1
+  rw [affineCombination_eq_weightedVSubOfPoint_vadd_of_sum_eq_one _ _ _ hw s.centroid] at hs
+  sorry
+
+theorem affineIndependent_centroid_replace_point (s : Simplex k P n)
+    (i : Fin (n + 1)) : AffineIndependent k fun x => if x = i then s.centroid else s.points x := by
+  set p : Fin (n + 1) → P := fun x => if x = i then s.centroid else s.points x with hp
+  have hi : p i ∉ affineSpan k (p '' {x : Fin (n+1) | x ≠ i}) := by
+    simp_rw [hp, if_pos]
+    have h : (p '' {x : Fin (n+1) | x ≠ i}) = s.points '' {i}ᶜ := by ext x; simp; grind
+    rw [h]
+    exact centroid_not_mem_affineSpan_compl s i
+  apply AffineIndependent.affineIndependent_of_notMem_span ?_ hi
+
+  have hsub := (s.faceOpposite i).independent
+  sorry
+
+theorem linearIndependent_point_compl_vsub_centroid' (s : Simplex k P n) (i₀ : Fin (n + 1)) :
+    LinearIndependent k fun i : { x // x ≠ i₀ } =>
+    (s.points i -ᵥ s.centroid : V) := by
+  set p : Fin (n + 1) → P := fun x => if x = i₀ then s.centroid else s.points x
+  have h := affineIndependent_iff_linearIndependent_vsub k p i₀
+  unfold p at h
+  have h1 := affineIndependent_centroid_replace_point s i₀
+
+  have h2 := h.1 h1
+  simp at h2
+  grind
 
 
-  -- exact s.independent fs g
+theorem linearIndependent_point_compl_vsub_centroid (s : Simplex k P n) (i₀ : Fin (n + 1)) :
+    LinearIndependent k fun i : { x // x ∈ ({i₀}ᶜ : Finset (Fin (n+1))) } =>
+    (s.points i -ᵥ s.centroid : V) := by
+  set p : Fin (n + 1) → P := fun x => if x = i₀ then s.centroid else s.points x
+  have h := affineIndependent_iff_linearIndependent_vsub k p i₀
+  unfold p at h
+  have h1 := affineIndependent_centroid_replace_point s i₀
+  have h2 := h.1 h1
+  simp at h2
+
   sorry
 
 
-
-theorem affineIndependent_iff_linearIndependent_vsub' (p : ι → P) (i1 : ι) :
-    AffineIndependent k p → LinearIndependent k fun i : { x // x ≠ i1 } => (p i -ᵥ p i1 : V) := by
-  classical
-    intro h
-    rw [linearIndependent_iff']
-    intro s g hg i hi
-    set f : ι → k := fun x => if hx : x = i1 then -∑ y ∈ s, g y else g ⟨x, hx⟩ with hfdef
-    let s2 : Finset ι := insert i1 (s.map (Embedding.subtype _))
-    have hfg : ∀ x : { x // x ≠ i1 }, g x = f x := by grind
-    rw [hfg]
-    have hf : ∑ ι ∈ s2, f ι = 0 := by
-      rw [Finset.sum_insert
-          (Finset.notMem_map_subtype_of_not_property s (Classical.not_not.2 rfl)),
-        Finset.sum_subtype_map_embedding fun x _ => (hfg x).symm]
-      rw [hfdef]
-      dsimp only
-      rw [dif_pos rfl]
-      exact neg_add_cancel _
-
-    have hs2 : s2.weightedVSub p f = (0 : V) := by
-      set f2 : ι → V := fun x => f x • (p x -ᵥ p i1) with hf2def
-      set g2 : { x // x ≠ i1 } → V := fun x => g x • (p x -ᵥ p i1)
-      have hf2g2 : ∀ x : { x // x ≠ i1 }, f2 x = g2 x := by
-        simp only [g2, hf2def]
-        refine fun x => ?_
-        rw [hfg]
-      rw [Finset.weightedVSub_eq_weightedVSubOfPoint_of_sum_eq_zero s2 f p hf (p i1),
-        Finset.weightedVSubOfPoint_insert, Finset.weightedVSubOfPoint_apply,
-        Finset.sum_subtype_map_embedding fun x _ => hf2g2 x]
-      exact hg
-
-    exact h s2 f hf hs2 i (Finset.mem_insert_of_mem (Finset.mem_map.2 ⟨i, hi, rfl⟩))
-
-
--- theorem mem_median_exist_vsub [CharZero k] (s : Simplex k P n) (i : Fin (n + 1))
---     {p : P} (h : p ∈ s.median i) :
---     ∃ (r : k),  s.points i -ᵥ p = r • (s.centroid -ᵥ s.points i) := by
---     sorry
-
 /-- The medians of a simplex are concurrent at the centroid of the simplex -/
-theorem eq_centroid_of_forall_mem_median [CharZero k] (s : Simplex k P n) {hn : 2 ≤ n} {p : P}
-    (h : ∀ i, p ∈ s.median i) :
-    p = s.centroid := by
-
+theorem eq_centroid_of_forall_mem_median [CharZero k] (s : Simplex k P n) {hn : 1 < n} {p : P}
+    (h : ∀ i, p ∈ s.median i) : p = s.centroid := by
   rw [←vsub_eq_zero_iff_eq]
-
+  set i₀: Fin (n+1) := 0
   set v := p -ᵥ s.centroid
   have hp : p = v +ᵥ s.centroid := by rw [vsub_vadd]
-  conv at h =>
-    intro i
-    rw [median_eq_affineSpan_point_centroid]
-    rw [hp]
-    rw [vadd_right_mem_affineSpan_pair]
-
-  let u : Fin (n + 1) → V := fun i => s.points i -ᵥ s.centroid
-  have h_span : ∀ i, v ∈ (Submodule.span k ({u i} : Set V)) := by
+  let s' : Finset (Fin (n + 1)) := {i₀}ᶜ
+  let u : s' → V := fun i => s.points i -ᵥ s.centroid
+  have h_span : ∀ i : s', v ∈ (Submodule.span k ({u i} : Set V)) := by
     intro i
     unfold u
-    unfold v
-    sorry
-
-  have hi : LinearIndependent k u :=by
-    sorry
-
-  have he : ∃ i j : Fin (n + 1), i ≠ j := by
-    use 0 , 1
-    norm_num
+    have hi:= h i
+    rw [median_eq_affineSpan_point_centroid] at hi
+    have h2 := right_mem_affineSpan_pair k (s.points i) s.centroid
+    rw [hp, vadd_right_mem_affineSpan_pair] at hi
+    obtain ⟨t, ht⟩ := hi
+    rw [←ht]
+    apply Submodule.smul_mem
+    simp only [Submodule.mem_span_singleton_self]
+  have hi : LinearIndependent k u := linearIndependent_point_compl_vsub_centroid s i₀
+  have he : ∃ i j : s', i ≠ j := by
+    simp only [ne_eq, Subtype.exists, Subtype.mk.injEq, exists_prop]
+    have hcard: s'.card = n := by
+      rw [Finset.card_compl, Fintype.card_fin]
+      simp
+    have hcard' : 1 < #s' :=by grind
+    rw [Finset.one_lt_card_iff] at hcard'
+    grind
   choose i j hij using he
-
-  have h_ij : Disjoint ({i}: Set (Fin (n+1))) {j} := by
+  have h_ij : Disjoint ({i}: Set { x // x ∈ s' }) {j} := by
     simp [hij]
-
   set u_i := Submodule.span k ({u i} : Set V)
   set u_j := Submodule.span k ({u j} : Set V)
   have h_disjoint : Disjoint u_i u_j := by
     have x:= LinearIndependent.disjoint_span_image hi h_ij
     simp at x
     exact x
-
-
   have h_vi : v ∈ u_i := by
     apply h_span
   have h_vj : v ∈ u_j := by
     apply h_span
-
   exact Submodule.disjoint_def.1 h_disjoint _ h_vi h_vj
-
-
-
-
-
-
-
-
-
-
-  -- rw [centroid_iff_sum_vsub_eq_zero]
-
-
-
-
 
 end Simplex
 
