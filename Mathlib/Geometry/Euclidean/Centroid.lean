@@ -337,9 +337,11 @@ theorem linearIndependent_point_compl_vsub_centroid' (s : Simplex k P n) (i₀ :
   grind
 
 
+
 theorem linearIndependent_point_compl_vsub_centroid (s : Simplex k P n) (i₀ : Fin (n + 1)) :
     LinearIndependent k fun i : { x // x ∈ ({i₀}ᶜ : Finset (Fin (n+1))) } =>
     (s.points i -ᵥ s.centroid : V) := by
+
   set p : Fin (n + 1) → P := fun x => if x = i₀ then s.centroid else s.points x
   have h := affineIndependent_iff_linearIndependent_vsub k p i₀
   unfold p at h
@@ -347,7 +349,41 @@ theorem linearIndependent_point_compl_vsub_centroid (s : Simplex k P n) (i₀ : 
   have h2 := h.1 h1
   simp at h2
 
-  sorry
+  have hequiv: { x // x ∈ ({i₀} : Set (Fin (n+1)))ᶜ } ≃ { x // x ≠ i₀ } := by
+    simp
+    apply Equiv.subtypeEquivRight
+    intro x
+    rfl
+
+  set f : { x // x ∈ ({i₀}ᶜ : Finset (Fin (n+1))) } → { x // x ≠ i₀ } :=
+    have h (x : { x // x ∈ ({i₀}ᶜ : Finset (Fin (n+1))) }) : x.val ≠ i₀ := by
+      simp
+      grind [mem_compl, Finset.notMem_singleton]
+
+    fun x => ⟨x.val,h x⟩
+    with hf
+
+  have f_inj : Function.Injective f := by
+    intro x y hxy
+    unfold f at hxy
+    simp at hxy
+    grind
+
+  have h3:= h2.comp f f_inj
+  conv at h3 =>
+    enter [2]
+    ext i
+    rw [comp_apply]
+
+  convert h3 using 1
+  funext i
+  congr 2
+  rw [if_neg]
+  rw [hf]
+  simp
+  have hi:= i.prop
+  rw [mem_compl, Finset.notMem_singleton] at hi
+  exact hi
 
 
 /-- The medians of a simplex are concurrent at the centroid of the simplex -/
