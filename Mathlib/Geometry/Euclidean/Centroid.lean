@@ -24,6 +24,12 @@ theorem centroid_mem_affineSpan_range [CharZero k] {n : ℕ} (s : Simplex k P n)
   centroid_mem_affineSpan_of_card_eq_add_one k _ (card_fin (n + 1))
 
 
+
+theorem centroid_eq_affine_combination (s : Simplex k P n) :
+    s.centroid = affineCombination k univ s.points (centroidWeights k univ) := by
+  rw [centroid, Finset.centroid_def]
+
+
 theorem centroid_vsub_eq {n : ℕ} [CharZero k] (s : Simplex k P n) (p : P) :
     s.centroid -ᵥ p = ((1:k) / (n + 1)) • ∑ x, (s.points x -ᵥ p) := by
   rw [centroid, Finset.centroid_def]
@@ -300,19 +306,50 @@ open Function
 
 variable {ι : Type*}
 
-theorem centroid_not_mem_affineSpan_compl (s : Simplex k P n) (i : Fin (n + 1)) :
-    s.centroid ∉ affineSpan k (s.points '' {i}ᶜ) := by
-  intro h
-  rw [←range_faceOpposite_points] at h
 
-  let p := (s.faceOpposite i).points
-  have h1:= (mem_affineSpan_iff_eq_affineCombination k V).mp h
-  choose s1 w hw hs using h1
-  rw [affineCombination_eq_weightedVSubOfPoint_vadd_of_sum_eq_one _ _ _ hw s.centroid] at hs
+lemma AffineIndependent.eq_zero_of_affineCombination_mem_affineSpan {p : ι → P}
+    (ha : AffineIndependent k p) {fs : Finset ι} {w : ι → k} (hw : ∑ i ∈ fs, w i = 1) {s : Set ι}
+    (hm : fs.affineCombination k p w ∈ affineSpan k (p '' s)) {i : ι} (hifs : i ∈ fs)
+    (his : i ∉ s) : w i = 0 := by
   sorry
 
-theorem affineIndependent_centroid_replace_point (s : Simplex k P n)
+
+theorem centroid_not_mem_affineSpan_compl [CharZero k] (s : Simplex k P n) (i : Fin (n + 1)) :
+    s.centroid ∉ affineSpan k (s.points '' {i}ᶜ) := by
+  intro h
+
+  have hc := s.centroid_eq_affine_combination
+  rw [hc] at h
+
+  set w:= (centroidWeights k (univ: Finset (Fin (n + 1)))) with wdef
+  have hw: ∑ i, w i = 1 := by
+    rw [sum_centroidWeights_eq_one_of_card_ne_zero]
+    simp
+
+  have hifs: i ∈ univ := by simp
+  have his : i ∉ ({i}ᶜ : Set (Fin (n+1))) := by simp
+
+  have h1:= AffineIndependent.eq_zero_of_affineCombination_mem_affineSpan s.independent hw h hifs
+    his
+
+  have h2 : w i = (1:k)/(n+1) := by
+    rw [wdef, centroidWeights_apply, card_univ, Fintype.card_fin]
+    simp only [Nat.cast_add, Nat.cast_one]
+    field_simp
+
+  rw [h2] at h1
+  field_simp at h1
+  norm_cast at h1
+
+
+  -- rw [affineCombination_eq_weightedVSubOfPoint_vadd_of_sum_eq_one _ _ _ hw s.centroid] at hs
+
+
+
+theorem affineIndependent_centroid_replace_point [NeZero n] (s : Simplex k P n)
     (i : Fin (n + 1)) : AffineIndependent k fun x => if x = i then s.centroid else s.points x := by
+
+
   set p : Fin (n + 1) → P := fun x => if x = i then s.centroid else s.points x with hp
   have hi : p i ∉ affineSpan k (p '' {x : Fin (n+1) | x ≠ i}) := by
     simp_rw [hp, if_pos]
@@ -322,19 +359,29 @@ theorem affineIndependent_centroid_replace_point (s : Simplex k P n)
   apply AffineIndependent.affineIndependent_of_notMem_span ?_ hi
 
   have hsub := (s.faceOpposite i).independent
+
+
+
+
+  set f : {x | x ≠ i} → P := fun x => p x.val with hf
+  have hn: n = n -1 +1 := by
+    rw [Nat.sub_add_cancel NeZero.one_le]
+
+  set g : Fin n → P := fun x => (s.faceOpposite i).points (Fin.cast hn x) with hg
+
+
+  unfold p at hf
+
+
+
+
+
   sorry
 
-theorem linearIndependent_point_compl_vsub_centroid' (s : Simplex k P n) (i₀ : Fin (n + 1)) :
-    LinearIndependent k fun i : { x // x ≠ i₀ } =>
-    (s.points i -ᵥ s.centroid : V) := by
-  set p : Fin (n + 1) → P := fun x => if x = i₀ then s.centroid else s.points x
-  have h := affineIndependent_iff_linearIndependent_vsub k p i₀
-  unfold p at h
-  have h1 := affineIndependent_centroid_replace_point s i₀
 
-  have h2 := h.1 h1
-  simp at h2
-  grind
+
+
+
 
 
 
@@ -348,18 +395,10 @@ theorem linearIndependent_point_compl_vsub_centroid (s : Simplex k P n) (i₀ : 
   have h1 := affineIndependent_centroid_replace_point s i₀
   have h2 := h.1 h1
   simp at h2
-
-  have hequiv: { x // x ∈ ({i₀} : Set (Fin (n+1)))ᶜ } ≃ { x // x ≠ i₀ } := by
-    simp
-    apply Equiv.subtypeEquivRight
-    intro x
-    rfl
-
   set f : { x // x ∈ ({i₀}ᶜ : Finset (Fin (n+1))) } → { x // x ≠ i₀ } :=
     have h (x : { x // x ∈ ({i₀}ᶜ : Finset (Fin (n+1))) }) : x.val ≠ i₀ := by
       simp
       grind [mem_compl, Finset.notMem_singleton]
-
     fun x => ⟨x.val,h x⟩
     with hf
 
