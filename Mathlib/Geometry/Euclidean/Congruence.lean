@@ -113,4 +113,40 @@ theorem angle_eq_of_congruent (h : v₁ ≅ v₂) (i j k : ι) :
   simp_rw [real_inner_eq_norm_mul_self_add_norm_mul_self_sub_norm_sub_mul_self_div_two,
     vsub_sub_vsub_cancel_right, ← dist_eq_norm_vsub, h.dist_eq]
 
+theorem dist_le_of_angle_le (hd₁ : dist a b = dist a' b') (hd₂ : dist c b = dist c' b')
+    (ha : ∠ a b c ≤ ∠ a' b' c') : dist a c ≤ dist a' c' := by
+  rw [← Real.sqrt_sq dist_nonneg]
+  rw [← Real.sqrt_sq (dist_nonneg : 0 ≤ dist a' c')]
+  apply Real.sqrt_le_sqrt
+  simp_rw [pow_two]
+  rw [law_cos a b c]
+  rw [law_cos a' b' c']
+  field_simp [hd₁, hd₂]
+  ring_nf
+  simp
+  apply mul_le_mul_of_nonneg_left ?_ (by positivity)
+  exact Real.cos_le_cos_of_nonneg_of_le_pi (angle_nonneg a b c) (angle_le_pi a' b' c') ha
+
+theorem dist_le_iff_angle_le (hd₁ : dist a b = dist a' b') (hd₂ : dist c b = dist c' b')
+    (h : ¬Collinear ℝ {a, b, c}) : dist a c ≤ dist a' c' ↔  ∠ a b c ≤ ∠ a' b' c' :=by
+  have h1:  dist a c ≤ dist a' c' ↔ Real.cos (∠ a' b' c') ≤ Real.cos (∠ a b c) := by
+    rw [← Real.sqrt_sq dist_nonneg]
+    rw [← Real.sqrt_sq (dist_nonneg : 0 ≤ dist a' c')]
+    rw [Real.sqrt_le_sqrt_iff (by simp)]
+    simp_rw [pow_two]
+    rw [law_cos a b c]
+    rw [law_cos a' b' c']
+    field_simp [←hd₁,←hd₂]
+    ring_nf
+    rw [add_assoc]
+    simp
+    rw [mul_le_mul_iff_of_pos_left]
+    have hd1 : 0 < dist a b := dist_pos.mpr (ne₁₂_of_not_collinear h)
+    have hd2 : 0 < dist c b := dist_pos.mpr (ne₂₃_of_not_collinear h).symm
+    grind [mul_pos_iff_of_pos_left]
+  rw [h1]
+  exact Real.strictAntiOn_cos.le_iff_le ⟨angle_nonneg _ _ _, angle_le_pi _ _ _⟩
+    ⟨angle_nonneg _ _ _, angle_le_pi _ _ _⟩
+
+
 end EuclideanGeometry
