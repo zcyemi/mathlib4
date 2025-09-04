@@ -269,6 +269,7 @@ lemma isTangent_of_mem_tangentSet {as : AffineSubspace ℝ P} {s : Sphere P}
 def tangentsFrom (s : Sphere P) (p : P) : Set (AffineSubspace ℝ P) :=
   {as ∈ s.tangentSet | p ∈ as}
 
+
 lemma mem_tangentsFrom_iff {as : AffineSubspace ℝ P} {s : Sphere P} {p : P} :
     as ∈ s.tangentsFrom p ↔ as ∈ s.tangentSet ∧ p ∈ as :=
   Iff.rfl
