@@ -108,6 +108,23 @@ lemma index_equiv (f : ι' ≃ ι) (v₁ : ι → P₁) (v₂ : ι → P₂) :
   refine ⟨r, hr, fun i₁ i₂ => ?_⟩
   simpa [f.right_inv i₁, f.right_inv i₂] using h (f.symm i₁) (f.symm i₂)
 
+variable {ι₁ ι₂ : Type*}
+
+/-- Reindexing both families by different equivs preserves similarity when composed. -/
+lemma reindex {v₁ : ι → P₁} {v₂ : ι → P₂} (e₁ : ι₁ ≃ ι) (e₂ : ι₂ ≃ ι) :
+    v₁ ∘ e₁ ∼ v₂ ∘ e₂ ↔ v₁ ∼ v₂ ∘ (e₁.symm.trans e₂) := by
+  rw [index_equiv e₁]
+  simp only [Function.comp_def]
+  constructor
+  · intro h
+    convert h using 1
+    ext i
+    simp [Equiv.trans]
+  · intro h
+    convert h using 1
+    ext i
+    simp [Equiv.trans]
+
 end Similar
 
 end PseudoEMetricSpace
@@ -146,6 +163,49 @@ lemma similar_iff_exists_pairwise_dist_eq :
       r * dist (v₂ i₁) (v₂ i₂))) := by
   simp_rw [similar_iff_exists_pairwise_nndist_eq, dist_nndist]
   exact_mod_cast Iff.rfl
+
+/-- Similarity holds if and only if all distances are proportional with a positive real ratio. -/
+lemma similar_iff_exists_pos_dist_eq :
+    Similar v₁ v₂ ↔ (∃ r : ℝ, 0 < r ∧ ∀ (i₁ i₂ : ι), (dist (v₁ i₁) (v₁ i₂) =
+      r * dist (v₂ i₁) (v₂ i₂))) := by
+  rw [similar_iff_exists_dist_eq]
+  constructor
+  · rintro ⟨r_nn, hr_ne, hdist⟩
+    refine ⟨r_nn.toReal, ?_, ?_⟩
+    · positivity
+    · intro i₁ i₂
+      have : (r_nn : ℝ) = r_nn.toReal := by simp [NNReal.coe_toReal]
+      rw [← this]
+      exact_mod_cast hdist i₁ i₂
+  · rintro ⟨r, hr_pos, hdist⟩
+    refine ⟨Real.toNNReal r, ?_, ?_⟩
+    · simp [hr_pos]
+    · intro i₁ i₂
+      have : r = (Real.toNNReal r).toReal := by simp [Real.toNNReal_pos.mpr hr_pos]
+      rw [this]
+      exact_mod_cast hdist i₁ i₂
+
+/-- Similarity holds if and only if all distances between points with different indices are
+proportional with a positive real ratio. -/
+lemma similar_iff_exists_pairwise_pos_dist_eq :
+    Similar v₁ v₂ ↔ (∃ r : ℝ, 0 < r ∧ Pairwise fun i₁ i₂ ↦ (dist (v₁ i₁) (v₁ i₂) =
+      r * dist (v₂ i₁) (v₂ i₂))) := by
+  rw [similar_iff_exists_pairwise_dist_eq]
+  constructor
+  · rintro ⟨r_nn, hr_ne, hdist⟩
+    refine ⟨r_nn.toReal, ?_, ?_⟩
+    · positivity
+    · intro i₁ i₂ hi
+      have : (r_nn : ℝ) = r_nn.toReal := by simp [NNReal.coe_toReal]
+      rw [← this]
+      exact_mod_cast hdist hi
+  · rintro ⟨r, hr_pos, hdist⟩
+    refine ⟨Real.toNNReal r, ?_, ?_⟩
+    · simp [hr_pos]
+    · intro i₁ i₂ hi
+      have : r = (Real.toNNReal r).toReal := by simp [Real.toNNReal_pos.mpr hr_pos]
+      rw [this]
+      exact_mod_cast hdist hi
 
 namespace Similar
 
