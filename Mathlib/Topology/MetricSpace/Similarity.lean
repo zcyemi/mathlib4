@@ -240,6 +240,96 @@ alias ⟨exists_pairwise_dist_eq, _⟩ := similar_iff_exists_pairwise_dist_eq
 `similar_iff_exists_pairwise_dist_eq`. -/
 alias ⟨_, of_exists_pairwise_dist_eq⟩ := similar_iff_exists_pairwise_dist_eq
 
+/-- A similarity scales distance with positive real ratio. Forward direction of
+`similar_iff_exists_pos_dist_eq`. -/
+alias ⟨exists_pos_dist_eq, _⟩ := similar_iff_exists_pos_dist_eq
+
+/-- Similarity follows from scaled distance with positive real ratio. Backward direction of
+`similar_iff_exists_pos_dist_eq`. -/
+alias ⟨_, of_exists_pos_dist_eq⟩ := similar_iff_exists_pos_dist_eq
+
+/-- A similarity pairwise scales distance with positive real ratio. Forward direction of
+`similar_iff_exists_pairwise_pos_dist_eq`. -/
+alias ⟨exists_pairwise_pos_dist_eq, _⟩ := similar_iff_exists_pairwise_pos_dist_eq
+
+/-- Similarity follows from pairwise scaled distance with positive real ratio. Backward direction
+of `similar_iff_exists_pairwise_pos_dist_eq`. -/
+alias ⟨_, of_exists_pairwise_pos_dist_eq⟩ := similar_iff_exists_pairwise_pos_dist_eq
+
+end Similar
+
+/-- For two similar families, there exists a positive ratio such that the distances between
+corresponding points are proportional. -/
+theorem exist_dist_eq_mul_dist_of_similar {v₁ : ι → P₁} {v₂ : ι → P₂} (h : v₁ ∼ v₂)
+    (i₁ i₂ : ι) :
+    ∃ r : ℝ, 0 < r ∧ dist (v₁ i₁) (v₁ i₂) = r * dist (v₂ i₁) (v₂ i₂) := by
+  rw [similar_iff_exists_pos_dist_eq] at h
+  rcases h with ⟨r, hr_pos, hdist⟩
+  use r
+  exact ⟨hr_pos, hdist i₁ i₂⟩
+
+variable {a b c : P₁} {a' b' c' : P₂}
+
+/-- If all the corresponding sides of two triangles are proportional with a positive real ratio,
+then the triangles are similar. -/
+theorem similar_of_three_pos_dist_eq (h : ∃ r : ℝ, 0 < r ∧ dist a b = r * dist a' b' ∧
+    dist b c = r * dist b' c' ∧ dist c a = r * dist c' a') :
+    ![a, b, c] ∼ ![a', b', c'] := by
+  rcases h with ⟨r, hr_pos, hd₁, hd₂, hd₃⟩
+  set r_nn : ℝ≥0 := Real.toNNReal r with hr_nn
+  rw [similar_iff_exists_dist_eq]
+  use r_nn
+  have h_ne : r_nn ≠ 0 := by
+    rw [hr_nn]
+    simp
+    linarith
+  have hr : r = r_nn.toReal := by
+    rw [hr_nn]
+    simp
+    positivity
+  rw [hr] at hd₁ hd₂ hd₃
+  refine ⟨h_ne, ?_⟩
+  intro i j
+  fin_cases i <;> fin_cases j <;> simp_all [dist_comm]
+
+namespace Similar
+
+variable {t₁ : Fin 3 → P₁} {t₂ : Fin 3 → P₂}
+
+/-- Reindexing both triangles by the same permutation preserves similarity. -/
+theorem reindex_perm (h : t₁ ∼ t₂) (e : Equiv.Perm (Fin 3)) :
+    (t₁ ∘ e) ∼ (t₂ ∘ e) := Similar.index_map h e
+
+theorem comm_left (h : ![a, b, c] ∼ ![a', b', c']) :
+    ![b, a, c] ∼ ![b', a', c'] := by
+  have hl : ![b, a, c] = ![a, b, c] ∘ Equiv.swap 0 1 := by
+    ext i
+    fin_cases i <;> simp; rfl
+  have hr : ![b', a', c'] = ![a', b', c'] ∘ Equiv.swap 0 1 := by
+    ext i
+    fin_cases i <;> simp; rfl
+  grind [reindex_perm]
+
+theorem comm_right (h : ![a, b, c] ∼ ![a', b', c']) :
+    ![a, c, b] ∼ ![a', c', b'] := by
+  have hl : ![a, c, b] = ![a, b, c] ∘ Equiv.swap 1 2 := by
+    ext i
+    fin_cases i <;> simp; rfl
+  have hr : ![a', c', b'] = ![a', b', c'] ∘ Equiv.swap 1 2 := by
+    ext i
+    fin_cases i <;> simp; rfl
+  grind [reindex_perm]
+
+theorem reverse (h : ![a, b, c] ∼ ![a', b', c']) :
+    ![c, b, a] ∼ ![c', b', a'] := by
+  have hl : ![c, b, a] = ![a, b, c] ∘ Equiv.swap 0 2 := by
+    ext i
+    fin_cases i <;> simp; rfl
+  have hr : ![c', b', a'] = ![a', b', c'] ∘ Equiv.swap 0 2 := by
+    ext i
+    fin_cases i <;> simp; rfl
+  grind [reindex_perm]
+
 end Similar
 
 end PseudoMetricSpace
