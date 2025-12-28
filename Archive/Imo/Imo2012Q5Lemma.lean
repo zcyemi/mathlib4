@@ -9,6 +9,7 @@ import Mathlib.Geometry.Euclidean.Sphere.Tangent
 import Mathlib.Geometry.Euclidean.Altitude
 import Mathlib.Geometry.Euclidean.Angle.Unoriented.Basic
 import Mathlib.Geometry.Euclidean.Triangle
+import Mathlib.Geometry.Euclidean.Similarity
 
 import Mathlib.Tactic
 
@@ -166,111 +167,6 @@ theorem collinear_comm_right {p₁ p₂ p₃ : Pt}
   rw [Set.pair_comm]
   exact h
 
-
-theorem SAS_eq_angle (a b c : Pt) (a' b' c' : Pt) (h_abc : ∠ a b c = ∠ a' b' c')
-  (h_dist : dist a b * dist c' b' = dist c b * dist a' b')
-  (h_not_collinear_abc : ¬ Collinear ℝ ({a, b, c} : Set Pt))
-  (h_not_collinear_a'b'c' : ¬ Collinear ℝ ({a', b', c'} : Set Pt)) :
-  ∠ c a b = ∠ c' a' b' ∧ ∠ b c a = ∠ b' c' a' := by
-  have hab : a ≠ b := ne₁₂_of_not_collinear h_not_collinear_abc
-  have hbc : b ≠ c := ne₂₃_of_not_collinear h_not_collinear_abc
-  have ha'b' : a' ≠ b' := ne₁₂_of_not_collinear h_not_collinear_a'b'c'
-  have hb'c' : b' ≠ c' := ne₂₃_of_not_collinear h_not_collinear_a'b'c'
-  have h_sinabc : Real.sin (∠ a b c) = Real.sin (∠ a' b' c') := by
-    rw [h_abc]
-  obtain h1 := sin_angle_div_dist_eq_sin_angle_div_dist hbc.symm hab.symm
-  obtain h2 := (sin_angle_div_dist_eq_sin_angle_div_dist hb'c'.symm ha'b'.symm).symm
-  have h1_mul_h2 : (sin (∠ a c b) * sin (∠ b' a' c')) / (dist b a * dist c' b') =
-  (sin (∠ b a c) * sin (∠ a' c' b')) / ( dist c b * dist b' a') := by
-    calc
-    _ = (sin (∠ b a c) / dist c b) * (sin (∠ a' c' b') / dist b' a') := by
-      rw[← h1, ← h2]
-      ring
-    _ = (sin (∠ b a c) * sin (∠ a' c' b')) / ( dist c b * dist b' a') := by
-      ring
-  rw [dist_comm] at h_dist
-  nth_rw 4 [dist_comm] at h_dist
-  rw [h_dist, div_left_inj'] at h1_mul_h2
-  swap
-  apply mul_ne_zero
-  exact dist_ne_zero.mpr (id (Ne.symm hbc))
-  exact dist_ne_zero.mpr (id (Ne.symm ha'b'))
-  have h3 : ∠ b a c = π - (∠ b c a + ∠ a b c) := by
-    obtain h := angle_add_angle_add_angle_eq_pi c hab.symm
-    rw[← h, angle_comm]
-    ring
-  have h4 : ∠ b' a' c' = π - (∠ b' c' a' + ∠ a b c) := by
-    obtain h := angle_add_angle_add_angle_eq_pi c' ha'b'.symm
-    rw[← h, angle_comm, h_abc]
-    ring
-  rw[h3, h4, sin_pi_sub, sin_pi_sub, sin_add, sin_add] at h1_mul_h2
-  apply sub_eq_zero_of_eq at h1_mul_h2
-  have h : sin (∠ a b c) * sin (∠ b c a - ∠ b' c' a') = 0 := by
-    calc
-    _ = sin (∠ a b c) * (sin (∠ b c a) * cos (∠ b' c' a') - cos (∠ b c a) * sin (∠ b' c' a'))
-      + cos (∠ a b c) * (sin (∠ b c a) * sin (∠ b' c' a') - sin (∠ b c a) * sin (∠ b' c' a')):= by
-      simp only [sub_self, mul_zero, add_zero, mul_eq_mul_left_iff]
-      left
-      rw[sin_sub]
-    _ = 0 := by
-      rw[← h1_mul_h2, mul_sub, mul_sub, mul_add, add_mul]
-      have h₁ : sin (∠ a b c) * (sin (∠ b c a) * cos (∠ b' c' a')) = sin (∠ a c b) * (cos (∠ b' c' a') * sin (∠ a b c)) := by
-        rw[mul_comm, mul_assoc, angle_comm]
-      have h₂ : sin (∠ a b c) * (cos (∠ b c a) * sin (∠ b' c' a')) = cos (∠ b c a) * sin (∠ a b c) * sin (∠ a' c' b') := by
-        rw[mul_comm, mul_assoc]
-        nth_rw 2 [angle_comm, mul_comm]
-        rw[← mul_assoc]
-      have h₃ : cos (∠ a b c) * (sin (∠ b c a) * sin (∠ b' c' a')) = sin (∠ a c b) * (sin (∠ b' c' a') * cos (∠ a b c)) := by
-        rw[mul_comm, mul_assoc, angle_comm]
-      have h₄ : cos (∠ a b c) * (sin (∠ b c a) * sin (∠ b' c' a')) = sin (∠ b c a) * cos (∠ a b c) * sin (∠ a' c' b') := by
-        rw[mul_comm, mul_assoc]
-        nth_rw 2 [angle_comm, mul_comm]
-        rw[← mul_assoc]
-      rw[h₁, h₂]
-      nth_rw 1[h₃]
-      rw[h₄]
-      ring
-  have h_sinc : sin (∠ b c a - ∠ b' c' a') = 0 := by
-    have h_ne_zero : sin (∠ a b c) ≠ 0 := by
-      exact sin_ne_zero_of_not_collinear h_not_collinear_abc
-    exact (mul_eq_zero_iff_left h_ne_zero).mp h
-  have h_bca : ∠ b c a - ∠ b' c' a' = 0 := by
-    have h_not_collinear_bca : ¬ Collinear ℝ ({b, c, a} : Set Pt) := by
-      rw[← affineIndependent_iff_not_collinear_set] at *
-      apply AffineIndependent_reverse
-      apply AffineIndependent_comm_right
-      exact h_not_collinear_abc
-    have h_not_collinear_b'c'a' : ¬ Collinear ℝ ({b', c', a'} : Set Pt) := by
-      rw[← affineIndependent_iff_not_collinear_set] at *
-      apply AffineIndependent_reverse
-      apply AffineIndependent_comm_right
-      exact h_not_collinear_a'b'c'
-    have h_range : 0 < ∠ b c a ∧ ∠ b c a < π := by
-      constructor
-      refine angle_pos_of_not_collinear ?_
-      exact h_not_collinear_bca
-      apply angle_lt_pi_of_not_collinear
-      exact h_not_collinear_bca
-    have h_range' : 0 < ∠ b' c' a' ∧ ∠ b' c' a' < π := by
-      constructor
-      refine angle_pos_of_not_collinear ?_
-      exact h_not_collinear_b'c'a'
-      apply angle_lt_pi_of_not_collinear
-      exact h_not_collinear_b'c'a'
-    have h_diff_range : -π < ∠ b c a - ∠ b' c' a' ∧ ∠ b c a - ∠ b' c' a' < π := by
-      constructor
-      linarith
-      linarith
-    rw [← sin_eq_zero_iff_of_lt_of_lt]
-    exact h_sinc
-    exact h_diff_range.left
-    exact h_diff_range.right
-
-  rw[sub_eq_zero] at h_bca
-  rw[h_bca, ← h4, angle_comm] at h3
-  nth_rw 2 [angle_comm] at h3
-  exact ⟨h3, h_bca⟩
-
 theorem affineIndependent_of_affineIndependent_collinear {a b c d: Pt}
   (hABC: AffineIndependent ℝ ![a,b,c])
   (hd: Collinear ℝ {b, c, d})
@@ -325,145 +221,73 @@ theorem angle_eq_of_sbtw {A B P C : Pt} (h : Sbtw ℝ B P C):
   apply InnerProductGeometry.angle_smul_right_of_pos
   exact hr1
 
-theorem cospherical_of_mul_dist_eq_mul_dist
-    [Fact (finrank ℝ V = 2)] [ho: Oriented ℝ V (Fin 2)]
-    {a b c d p : Pt} (h_notCollinear : ¬ Collinear ℝ ({a, p, c} : Set Pt))
-    (hapb : Sbtw ℝ a p b) (hcpd : Sbtw ℝ c p d)
-    (h : dist a p * dist b p = dist c p * dist d p) :
+theorem AffineSubspace.Sbtw.oangle_sign_eq_of_sbtw_sbtw
+    [Fact (finrank ℝ V = 2)]
+    [ho : Oriented ℝ V (Fin 2)]
+    {p p₁ p₂ p₃ p₄ : Pt}
+    (hp₁₃ : Sbtw ℝ p₁ p p₃) (hp₂₄ : Sbtw ℝ p₂ p p₄) :
+    (∡ p₁ p₄ p₂).sign = (∡ p₁ p₃ p₂).sign := by
+  rw [← Sbtw.oangle_eq_right hp₂₄.symm, Sbtw.oangle_sign_eq _ hp₁₃, ← oangle_rotate_sign,
+    Sbtw.oangle_sign_eq _ hp₂₄.symm, Sbtw.oangle_eq_left hp₁₃.symm]
+
+theorem AffineSubspace.Sbtw.oangle_sign_eq_of_sbtw_sbtw'
+    [Fact (finrank ℝ V = 2)]
+    [ho : Oriented ℝ V (Fin 2)]
+    {p p₁ p₂ p₃ p₄ : Pt}
+    (hp₁₃ : Sbtw ℝ p p₁ p₃) (hp₂₄ : Sbtw ℝ p p₂ p₄) :
+    (∡ p₁ p₄ p₂).sign = (∡ p₁ p₃ p₂).sign := by
+  rw [Sbtw.oangle_eq_right hp₂₄.symm, Sbtw.oangle_sign_eq_right _ hp₁₃.symm, oangle_rotate_sign,
+    ← Sbtw.oangle_sign_eq_left p₃ hp₂₄, Sbtw.oangle_eq_left hp₁₃.symm]
+
+theorem cospherical_of_mul_dist_eq_mul_dist_of_angle_eq_pi [Fact (Module.finrank ℝ V = 2)]
+    [Module.Oriented ℝ V (Fin 2)] {a b c d p : Pt} (hn : ¬ Collinear ℝ ({a, p, c} : Set Pt))
+    (hapb : ∠ a p b = π) (hcpd : ∠ c p d = π) (h : dist a p * dist b p = dist c p * dist d p) :
     Cospherical ({a, b, c, d} : Set Pt) := by
-  have h_notCollinear_pca : ¬Collinear ℝ {p, c, a} := by
-    rw[← affineIndependent_iff_not_collinear_set] at *
-    apply AffineIndependent_comm_left
-    apply AffineIndependent_reverse
-    exact h_notCollinear
-
-  have d_ne_p : d ≠ p := hcpd.right_ne
-  have b_ne_p : b ≠ p := hapb.right_ne
-
-  have h_notCollinear_apd : AffineIndependent ℝ ![a, p, d] := by
-    rw[← affineIndependent_iff_not_collinear_set] at *
-    apply affineIndependent_of_affineIndependent_collinear
-    exact h_notCollinear
-    apply collinear_comm_left
-    exact hcpd.wbtw.collinear
-    exact d_ne_p.symm
-
-  have h_notCollinear_abd : ¬ Collinear ℝ ({a, b, d} : Set Pt) := by
-    rw[← affineIndependent_iff_not_collinear_set] at *
-    apply affineIndependent_of_sbtw_affineIndependent'
-    exact h_notCollinear_apd
-    exact hapb
-
-
-  have h_notCollinear_dpb: ¬Collinear ℝ {d, p, b} := by
-    rw[← affineIndependent_iff_not_collinear_set] at *
-    apply AffineIndependent_reverse at h_notCollinear_apd
-    apply affineIndependent_of_affineIndependent_collinear
-    exact h_notCollinear_apd
-    apply collinear_comm_left
-    exact hapb.wbtw.collinear
-    exact b_ne_p.symm
-
-  have a_ne_c : a ≠ c := ne₁₃_of_not_collinear h_notCollinear
-  have b_ne_d : b ≠ d := ne₂₃_of_not_collinear h_notCollinear_abd
-  have a_ne_p : a ≠ p := hapb.left_ne
-  have c_ne_p : c ≠ p := hcpd.left_ne
-
-  have h_angle : ∡ a p c = ∡ b p d := _root_.Sbtw.oangle_eq_left_right hapb hcpd
-
-  have h1: ∠ a p c = ∠ d p b := by
-    nth_rw 2[angle_comm]
-    apply angle_eq_angle_of_angle_eq_pi_of_angle_eq_pi
-    exact Sbtw.angle₁₂₃_eq_pi hapb
-    exact Sbtw.angle₁₂₃_eq_pi hcpd
-
-  obtain h_angle_eq := SAS_eq_angle a p c d p b h1 h h_notCollinear h_notCollinear_dpb
-
-  have h2:= h_angle_eq.right
-  rw[angle_comm] at h2
-  nth_rw 2[angle_comm] at h2
-
-  have h3 := h_angle_eq.left
-  rw[angle_comm] at h3
-  nth_rw 2[angle_comm] at h3
-
-  apply EuclideanGeometry.cospherical_of_two_zsmul_oangle_eq_of_not_collinear
-
-  have hoangle : ∡ a b d = ∡ a c d := by
-    have h₁ : ∡ a b d = ∡ p b d := by
-      symm
-      apply _root_.Sbtw.oangle_eq_left
-      exact hapb.symm
-    have h₂ : ∡ a c d = ∡ a c p := by
-      symm
-      apply _root_.Sbtw.oangle_eq_right
-      exact hcpd
-    rw [h₁, h₂]
-    apply oangle_eq_of_angle_eq_of_sign_eq
-    rw[h2, angle_comm]
-    have h_apc : ∡ a p c + ∡ p c a + ∡ c a p = π := by
-      exact oangle_add_oangle_add_oangle_eq_pi a_ne_p.symm c_ne_p a_ne_c
-    have h_bpd : ∡ b p d + ∡ p d b + ∡ d b p = π := by
-      exact oangle_add_oangle_add_oangle_eq_pi b_ne_p.symm d_ne_p b_ne_d
-    rw[← h_apc, h_angle, add_assoc, add_assoc] at h_bpd
-    simp at h_bpd
-    have h2_oangle : ∡ a c p = ∡ p b d ∨ ∡ a c p = - ∡ p b d := by
-      nth_rw 2[angle_comm] at h2
-      exact oangle_eq_or_eq_neg_of_angle_eq h2 a_ne_c.symm c_ne_p b_ne_p b_ne_d
-    rcases h2_oangle with h2_oangle | h2_oangle_neg
-    · rw[h2_oangle]
-    · have h4 : -∡ p b d = ∡ d b p := by
-        symm
-        exact oangle_rev p b d
-      rw [← h2_oangle_neg] at h4
-      rw[← h4] at h_bpd
-      have h3_oangle : ∡ p a c = ∡ p d b ∨ ∡ p a c = - ∡ p d b := by
-        exact oangle_eq_or_eq_neg_of_angle_eq h3 a_ne_p a_ne_c d_ne_p b_ne_d.symm
-      rcases h3_oangle with h3_oangle | h3_oangle_neg
-      · exfalso
-        have h₃ : - ∡ c a p = ∡ p a c := by
-          symm
-          exact oangle_rev c a p
-        have h₄ : ∡ a c p = - ∡ p c a := oangle_rev p c a
-        rw[← h3_oangle, ← h₃, h₄] at h_bpd
-        have h₅ : -∡ c a p + -∡ p c a = - (∡ p c a + ∡ c a p) := by
-          simp only [neg_add_rev]
-        rw[h₅] at h_bpd
-        have h₆ : (2 : ℤ) • (∡ p c a + ∡ c a p) = 0 := by
-          rw[neg_eq_iff_add_eq_zero, ← two_zsmul] at h_bpd
-          exact h_bpd
-        rw[Angle.two_zsmul_eq_zero_iff] at h₆
-        have h₇ : ∡ a p c ≠ 0 ∧ ∡ a p c ≠ π := by
-          rw[oangle_ne_zero_and_ne_pi_iff_not_collinear]
-          exact h_notCollinear
-        rcases h₆ with h₆ | h₆
-        · rw[add_assoc, h₆, add_zero] at h_apc
-          aesop
-        · rw[add_assoc, h₆] at h_apc
-          simp at h_apc
-          aesop
-      · exfalso
-        rw[← neg_eq_iff_eq_neg] at h3_oangle_neg h2_oangle_neg
-        have h₃ : ∡ c a p = -∡ p a c := oangle_rev p a c
-        have h₄ : ∡ a c p = -∡ p c a := oangle_rev p c a
-        rw[← h3_oangle_neg, ← h₃, h₄, add_comm] at h_bpd
-        simp at h_bpd
-        have h₅ : (2 : ℤ) • ∡ p c a = 0 := by
-          rw[neg_eq_iff_add_eq_zero, ← two_zsmul] at h_bpd
-          exact h_bpd
-        rw[Angle.two_zsmul_eq_zero_iff] at h₅
-        have h₆ : ∡ p c a ≠ 0 ∧ ∡ p c a ≠ π := by sorry
-          -- rw[oangle_ne_zero_and_ne_pi_iff_not_collinear]
-          -- exact h_notCollinear_pca
-        rcases h₅ with h₅ | h₅
-        · aesop
-        · rw[add_comm, h₅] at h_apc
-          aesop
-  rw [hoangle]
-  exact h_notCollinear_abd
+  suffices h_equiv : Cospherical ({a, b, d, c} : Set Pt) by
+    grind [Set.pair_comm d c]
+  have h_angle_eq : ∠ a p d = ∠ c p b := by
+    grind [angle_comm, angle_eq_angle_of_angle_eq_pi_of_angle_eq_pi hcpd]
+  rw [EuclideanGeometry.angle_eq_pi_iff_sbtw] at hapb hcpd
+  have h_notcol_abc : ¬ Collinear ℝ ({a, b, c} : Set Pt) := by
+    intro hcol
+    have hcol_apb := hapb.wbtw.collinear
+    suffices hcol : Collinear ℝ ({a, p, c} : Set Pt) by grind
+    suffices hcol_apcb : Collinear ℝ ({c, p, a, b} : Set Pt) by grind [Collinear.subset _ hcol_apcb]
+    apply collinear_insert_insert_of_mem_affineSpan_pair
+    · grind [Collinear.mem_affineSpan_of_mem_of_ne, hapb.left_ne_right]
+    · grind [Collinear.mem_affineSpan_of_mem_of_ne, hapb.left_ne_right]
+  apply EuclideanGeometry.cospherical_of_two_zsmul_oangle_eq_of_not_collinear ?_ h_notcol_abc
+  suffices h2 : ∡ a b c = ∡ a d c by grind
+  suffices h3 : ∠ a b c = ∠ a d c by
+    grind [oangle_eq_of_angle_eq_of_sign_eq, AffineSubspace.Sbtw.oangle_sign_eq_of_sbtw_sbtw]
+  rw [angle_comm, ← angle_eq_of_sbtw hapb.symm]
+  symm
+  rw [← angle_eq_of_sbtw hcpd.symm]
+  suffices h_sim : Similar ![a, p, d] ![c, p, b] by
+    grind [angle_comm, h_sim.angle_eq_all.right.left]
+  have h_notcol_apd : ¬ Collinear ℝ ({a, p, d} : Set Pt) := by
+    intro hcol
+    have hcol_cpd := hcpd.wbtw.collinear
+    suffices hcol : Collinear ℝ ({a, c, p, d} : Set Pt) by
+      have : Collinear ℝ ({a, p, c} : Set Pt) := by grind [Collinear.subset _ hcol]
+      exact hn this
+    apply collinear_insert_insert_of_mem_affineSpan_pair
+    · grind [Collinear.mem_affineSpan_of_mem_of_ne, hcpd.ne_right]
+    · grind [Collinear.mem_affineSpan_of_mem_of_ne, hcpd.ne_right]
+  have h_notcol_cpb : ¬ Collinear ℝ ({c, p, b} : Set Pt) := by
+    intro hcol
+    have hcol_apb := hapb.wbtw.collinear
+    suffices hcol : Collinear ℝ ({c, a, p, b} : Set Pt) by
+      have : Collinear ℝ ({a, p, c} : Set Pt) := by grind [Collinear.subset _ hcol]
+      exact hn this
+    apply collinear_insert_insert_of_mem_affineSpan_pair
+    · grind [Collinear.mem_affineSpan_of_mem_of_ne, hapb.ne_right]
+    · grind [Collinear.mem_affineSpan_of_mem_of_ne, hapb.ne_right]
+  apply similar_of_side_angle_side h_notcol_apd h_notcol_cpb h_angle_eq ?_
+  grind [dist_comm]
 
 theorem angle_point_altitudeFoot_eq_pi_div_two (t : Affine.Triangle ℝ Pt)
-    {i j: Fin 3} (h : i ≠ j) :
+    {i j : Fin 3} (h : i ≠ j) :
     angle (t.points i) (t.altitudeFoot i) (t.points j) = π / 2 := by
   have h : ⟪t.points j -ᵥ t.altitudeFoot i, t.points i -ᵥ t.altitudeFoot i⟫ = 0 := by
     refine Submodule.inner_right_of_mem_orthogonal

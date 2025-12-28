@@ -48,6 +48,9 @@ structure Imo2012Q5Cfg where
   AL_eq_AC : dist A L = dist A C
   M_mem_inf_AL_BK : M ∈ line[ℝ, A, L] ⊓ line[ℝ, B, K]
 
+def someOrientation [hd2 : Fact (finrank ℝ V = 2)] : Module.Oriented ℝ V (Fin 2) :=
+  ⟨Basis.orientation (finBasisOfFinrankEq _ _ hd2.out)⟩
+
 namespace Imo2012Q5Cfg
 
 variable {cfg : Imo2012Q5Cfg V Pt}
@@ -256,26 +259,8 @@ theorem notcol_KXL : ¬ Collinear ℝ {cfg.K, cfg.X, cfg.L} := by
   have h2 := affineIndependent_of_sbtw_affineIndependent indep_XBK cfg.Sbtw_BLX.symm
   simp [h2]
 
-theorem cosphereic_set_ω : Cospherical {cfg.K, cfg.K', cfg.L, cfg.L'} := by
-  sorry
-  -- apply cospherical_of_mul_dist_eq_mul_dist notcol_KXL hKXK' hLXL'
-  -- simp [hx, dist_comm]
-
-
-def sphere_ω : EuclideanGeometry.Sphere Pt :=
-  (cospherical_iff_exists_sphere.mp (cosphereic_set_ω (cfg := cfg))).choose
-
-theorem h_ω : ∀ p ∈ ({cfg.K, cfg.K', cfg.L, cfg.L'} : Set Pt) , p ∈ cfg.sphere_ω :=
-  (cospherical_iff_exists_sphere.mp cfg.cosphereic_set_ω).choose_spec
-
-theorem h_L : cfg.L ∈ cfg.sphere_ω := by simp [h_ω]
-theorem h_K : cfg.K ∈ cfg.sphere_ω := by simp [h_ω]
-theorem h_L' : cfg.L' ∈ cfg.sphere_ω := by simp [h_ω]
-theorem h_K' : cfg.K' ∈ cfg.sphere_ω := by simp [h_ω]
-
-theorem h_sphere_ω_radius_nonneg : 0 ≤ cfg.sphere_ω.radius := Sphere.radius_nonneg_of_mem cfg.h_L
-
 theorem L_ne_L' : cfg.L ≠ cfg.L' := cfg.hLXL'.left_ne_right
+
 theorem K_ne_K' : cfg.K ≠ cfg.K' := cfg.hKXK'.left_ne_right
 
 theorem h_L_interior : cfg.L ∈ cfg.triangle_ABC.interior := by
@@ -337,6 +322,30 @@ theorem power_A_B : (dist cfg.A cfg.C) ^ 2 = dist cfg.A cfg.K * dist cfg.A cfg.K
   rw [angle_comm]
   exact cfg.angle_BCA
 
+variable [hd2 : Fact (finrank ℝ V = 2)]
+theorem cosphereic_set_ω :
+    Cospherical {cfg.K, cfg.K', cfg.L, cfg.L'} := by
+  haveI := someOrientation V
+  apply cospherical_of_mul_dist_eq_mul_dist_of_angle_eq_pi cfg.notcol_KXL
+  · rw [angle_eq_pi_iff_sbtw]
+    exact cfg.hKXK'
+  · rw [angle_eq_pi_iff_sbtw]
+    exact cfg.hLXL'
+  · simp [cfg.hx, dist_comm]
+
+def sphere_ω : EuclideanGeometry.Sphere Pt :=
+  (cospherical_iff_exists_sphere.mp (cosphereic_set_ω (cfg := cfg))).choose
+
+theorem h_ω : ∀ p ∈ ({cfg.K, cfg.K', cfg.L, cfg.L'} : Set Pt) , p ∈ cfg.sphere_ω :=
+  (cospherical_iff_exists_sphere.mp cfg.cosphereic_set_ω).choose_spec
+
+theorem h_L : cfg.L ∈ cfg.sphere_ω := by simp [h_ω]
+theorem h_K : cfg.K ∈ cfg.sphere_ω := by simp [h_ω]
+theorem h_L' : cfg.L' ∈ cfg.sphere_ω := by simp [h_ω]
+theorem h_K' : cfg.K' ∈ cfg.sphere_ω := by simp [h_ω]
+
+theorem h_sphere_ω_radius_nonneg : 0 ≤ cfg.sphere_ω.radius := Sphere.radius_nonneg_of_mem cfg.h_L
+
 theorem h_power_ω_B : cfg.sphere_ω.power cfg.B = dist cfg.B cfg.L * dist cfg.B cfg.L' := by
   rw [Sphere.mul_dist_eq_power_of_radius_le_dist_center cfg.h_sphere_ω_radius_nonneg cfg.h_B_L_L'
     cfg.h_L cfg.h_L']
@@ -384,7 +393,7 @@ end Imo2012Q5
 
 open Imo2012Q5
 
-theorem imo2012_q5 {A B C D X K L M : Pt}
+theorem imo2012_q5 [Fact (finrank ℝ V = 2)] {A B C D X K L M : Pt}
     (affine_indep_ABC : AffineIndependent ℝ ![A, B, C])
     {triangle_ABC : Triangle ℝ Pt}
     (triangle_ABC_def : triangle_ABC = ⟨![A, B, C], affine_indep_ABC⟩)
