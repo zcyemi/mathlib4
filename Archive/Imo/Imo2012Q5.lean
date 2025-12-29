@@ -48,14 +48,53 @@ structure Imo2012Q5Cfg where
   AL_eq_AC : dist A L = dist A C
   M_mem_inf_AL_BK : M ∈ line[ℝ, A, L] ⊓ line[ℝ, B, K]
 
-def someOrientation [hd2 : Fact (finrank ℝ V = 2)] : Module.Oriented ℝ V (Fin 2) :=
-  ⟨Basis.orientation (finBasisOfFinrankEq _ _ hd2.out)⟩
-
 namespace Imo2012Q5Cfg
 
 variable {cfg : Imo2012Q5Cfg V Pt}
 
+def symm : Imo2012Q5Cfg V Pt where
+  A := cfg.B
+  B := cfg.A
+  C := cfg.C
+  D := cfg.D
+  X := cfg.X
+  K := cfg.L
+  L := cfg.K
+  M := cfg.M
+  affine_indep_ABC := cfg.affine_indep_ABC.comm_left
+  triangle_ABC := ⟨![cfg.B, cfg.A, cfg.C], cfg.affine_indep_ABC.comm_left⟩
+  triangle_ABC_def := by rfl
+  angle_BCA := by
+    rw [angle_comm]
+    exact cfg.angle_BCA
+  D_eq_altitudeFoot := by
+    rw [cfg.D_eq_altitudeFoot]
+    have hre : cfg.triangle_ABC = Simplex.reindex
+        ⟨![cfg.B, cfg.A, cfg.C], cfg.affine_indep_ABC.comm_left⟩ (Equiv.swap 0 1) := by
+      rw [cfg.triangle_ABC_def]
+      rw [reindex]
+      simp only [Nat.reduceAdd, Nat.succ_eq_add_one, Fin.isValue, Equiv.symm_swap, Simplex.mk.injEq]
+      ext x
+      fin_cases x <;> rfl
+    rw [hre]
+    rw [Simplex.altitudeFoot_reindex]
+    congr
+  Sbtw_CXD := cfg.Sbtw_CXD
+  Sbtw_AKX := cfg.Sbtw_BLX
+  BK_eq_BC := cfg.AL_eq_AC
+  Sbtw_BLX := cfg.Sbtw_AKX
+  AL_eq_AC := cfg.BK_eq_BC
+  M_mem_inf_AL_BK := cfg.M_mem_inf_AL_BK.symm
+
 open scoped Affine EuclideanGeometry Real
+
+def someOrientation [hd2 : Fact (finrank ℝ V = 2)] : Module.Oriented ℝ V (Fin 2) :=
+  ⟨Basis.orientation (finBasisOfFinrankEq _ _ hd2.out)⟩
+
+theorem symm_A_eq_B : cfg.symm.A = cfg.B := rfl
+theorem symm_B_eq_A : cfg.symm.B = cfg.A := rfl
+theorem symm_L_eq_K : cfg.symm.L = cfg.K := rfl
+theorem symm_K_eq_L : cfg.symm.K = cfg.L := rfl
 
 theorem not_col_ABC : ¬Collinear ℝ {cfg.A, cfg.B, cfg.C} :=
   affineIndependent_iff_not_collinear_set.mp cfg.affine_indep_ABC
@@ -78,19 +117,13 @@ theorem C_mem_sphere_A : cfg.C ∈ cfg.sphere_A := by
   rw [EuclideanGeometry.Sphere.radius, dist_comm]
   rfl
 
-theorem C_mem_sphere_B : cfg.C ∈ cfg.sphere_B := by
-  apply mem_sphere.mpr
-  rw [EuclideanGeometry.Sphere.radius, dist_comm]
-  rfl
+theorem C_mem_sphere_B : cfg.C ∈ cfg.sphere_B := cfg.symm.C_mem_sphere_A
 
 theorem dist_CA_eq_radius_A : dist cfg.C cfg.A = cfg.sphere_A.radius := by
   rw [EuclideanGeometry.Sphere.radius, dist_comm]
   rfl
 
-
-theorem dist_CB_eq_radius_B : dist cfg.C cfg.B = cfg.sphere_B.radius := by
-  rw [EuclideanGeometry.Sphere.radius, dist_comm]
-  rfl
+theorem dist_CB_eq_radius_B : dist cfg.C cfg.B = cfg.sphere_B.radius := cfg.symm.dist_CA_eq_radius_A
 
 def v_XK := cfg.X -ᵥ cfg.K
 def v_XL := cfg.X -ᵥ cfg.L
@@ -103,21 +136,17 @@ theorem K_mem_sphere_B : cfg.K ∈ cfg.sphere_B := by
   rw [dist_comm cfg.B cfg.K]
   rfl
 
-theorem L_mem_sphere_A : cfg.L ∈ cfg.sphere_A := by
-  apply mem_sphere.mpr
-  rw [← dist_CA_eq_radius_A, dist_comm cfg.C]
-  rw [← AL_eq_AC]
-  rw [dist_comm cfg.A cfg.L]
-  rfl
+theorem L_mem_sphere_A : cfg.L ∈ cfg.sphere_A := cfg.symm.K_mem_sphere_B
 
 def K' := cfg.sphere_B.secondInter cfg.K cfg.v_XK
 def L' := cfg.sphere_A.secondInter cfg.L cfg.v_XL
 
+theorem symm_K'_eq_L' : cfg.symm.K' = cfg.L' := by rfl
+theorem symm_L'_eq_K' : cfg.symm.L' = cfg.K' := by rfl
 
 theorem h_sphere_A_radius : 0 ≤ cfg.sphere_A.radius := Sphere.radius_nonneg_of_mem
     cfg.C_mem_sphere_A
-theorem h_sphere_B_radius : 0 ≤ cfg.sphere_B.radius := Sphere.radius_nonneg_of_mem
-    cfg.C_mem_sphere_B
+theorem h_sphere_B_radius : 0 ≤ cfg.sphere_B.radius := cfg.symm.h_sphere_A_radius
 
 theorem h_angle_CDB : ∠ cfg.C cfg.D cfg.B = π / 2 := by
   rw [cfg.D_eq_altitudeFoot]
@@ -126,20 +155,13 @@ theorem h_angle_CDB : ∠ cfg.C cfg.D cfg.B = π / 2 := by
   rw [h_C, h_B] at this
   exact this
 
-theorem h_angle_CDA : ∠ cfg.C cfg.D cfg.A = π / 2 := by
-  rw [cfg.D_eq_altitudeFoot]
-  have h_ne: (2: Fin 3) ≠ 0 := by simp
-  have := angle_point_altitudeFoot_eq_pi_div_two cfg.triangle_ABC h_ne
-  rw [h_C, h_A] at this
-  exact this
+theorem h_angle_CDA : ∠ cfg.C cfg.D cfg.A = π / 2 := cfg.symm.h_angle_CDB
 
 theorem h_BDX_eq_BDC : ∠ cfg.B cfg.D cfg.X = ∠ cfg.B cfg.D cfg.C := by
   apply angle_eq_of_sbtw
   exact cfg.Sbtw_CXD.symm
 
-theorem h_ADX_eq_ADC : ∠ cfg.A cfg.D cfg.X = ∠ cfg.A cfg.D cfg.C := by
-  apply angle_eq_of_sbtw
-  exact cfg.Sbtw_CXD.symm
+theorem h_ADX_eq_ADC : ∠ cfg.A cfg.D cfg.X = ∠ cfg.A cfg.D cfg.C := cfg.symm.h_BDX_eq_BDC
 
 theorem dist_X_sphere_B : dist cfg.X cfg.sphere_B.center < cfg.sphere_B.radius := by
   rw [dist_comm]
@@ -148,20 +170,14 @@ theorem dist_X_sphere_B : dist cfg.X cfg.sphere_B.center < cfg.sphere_B.radius :
   apply Sbtw.dist_lt_of_angle_eq_pi_div_two cfg.Sbtw_CXD.symm
   rw [angle_comm, h_BDX_eq_BDC, angle_comm, h_angle_CDB]
 
-theorem dist_X_sphere_A : dist cfg.X cfg.sphere_A.center < cfg.sphere_A.radius := by
-  rw [dist_comm]
-  have : cfg.sphere_A.radius = dist cfg.A cfg.C := by simp [sphere_a]
-  rw [this, sphere_a]
-  apply Sbtw.dist_lt_of_angle_eq_pi_div_two cfg.Sbtw_CXD.symm
-  rw [angle_comm, h_ADX_eq_ADC, angle_comm, h_angle_CDA]
+theorem dist_X_sphere_A : dist cfg.X cfg.sphere_A.center < cfg.sphere_A.radius :=
+  cfg.symm.dist_X_sphere_B
 
 theorem hKXK' : Sbtw ℝ cfg.K cfg.X cfg.K' := by
   have := Sphere.sbtw_secondInter cfg.K_mem_sphere_B cfg.dist_X_sphere_B
   exact this
 
-theorem hLXL' : Sbtw ℝ cfg.L cfg.X cfg.L' := by
-  have := Sphere.sbtw_secondInter cfg.L_mem_sphere_A cfg.dist_X_sphere_A
-  exact this
+theorem hLXL' : Sbtw ℝ cfg.L cfg.X cfg.L' := cfg.symm.hKXK'
 
 theorem pow_X_eq : cfg.sphere_A.power cfg.X = cfg.sphere_B.power cfg.X := by
   unfold Sphere.power
@@ -199,10 +215,7 @@ theorem h_L'_A : cfg.L' ∈ cfg.sphere_A := by
   simp only [Sphere.secondInter_mem]
   exact cfg.h_L_A
 
-theorem h_K'_B : cfg.K' ∈ cfg.sphere_B := by
-  unfold Imo2012Q5Cfg.K'
-  simp only [Sphere.secondInter_mem]
-  exact cfg.h_K_B
+theorem h_K'_B : cfg.K' ∈ cfg.sphere_B := cfg.symm.h_L'_A
 
 theorem pow_X_B : -cfg.sphere_B.power cfg.X = dist cfg.X cfg.K * dist cfg.X cfg.K' := by
   rw [Sphere.mul_dist_eq_neg_power_of_dist_center_le_radius cfg.h_sphere_B_radius
@@ -215,16 +228,8 @@ theorem pow_X_B : -cfg.sphere_B.power cfg.X = dist cfg.X cfg.K * dist cfg.X cfg.
   simp_rw [sphere_b]
   grind
 
-theorem pow_X_A : -cfg.sphere_A.power cfg.X = dist cfg.X cfg.L * dist cfg.X cfg.L' := by
-  rw [Sphere.mul_dist_eq_neg_power_of_dist_center_le_radius cfg.h_sphere_A_radius
-    cfg.hLXL'.wbtw.mem_affineSpan cfg.h_L_A cfg.h_L'_A]
-  have angle_XDA: ∠ cfg.X cfg.D cfg.A = π / 2 := by
-    rw [angle_comm, angle_eq_of_sbtw cfg.Sbtw_CXD.symm, angle_comm]
-    exact cfg.h_angle_CDA
-  have dist_lt:= Sbtw.dist_lt_of_angle_eq_pi_div_two cfg.Sbtw_CXD.symm angle_XDA
-  rw [dist_comm cfg.A cfg.X] at dist_lt
-  simp_rw [sphere_a]
-  grind
+theorem pow_X_A : -cfg.sphere_A.power cfg.X = dist cfg.X cfg.L * dist cfg.X cfg.L' :=
+  cfg.symm.pow_X_B
 
 theorem hx : dist cfg.X cfg.K * dist cfg.X cfg.K' = dist cfg.X cfg.L * dist cfg.X cfg.L' := by
   rw [← pow_X_A, ← pow_X_B, pow_X_eq]
@@ -276,9 +281,7 @@ theorem h_K_interior : cfg.K ∈ cfg.triangle_ABC.interior := by
 theorem sbtw_L'LB : Sbtw ℝ cfg.L' cfg.L cfg.B := by
   rw [sbtw_comm]
   exact sbtw_expand cfg.Sbtw_BLX cfg.hLXL'
-theorem sbtw_K'KA : Sbtw ℝ cfg.K' cfg.K cfg.A := by
-  rw [sbtw_comm]
-  exact sbtw_expand cfg.Sbtw_AKX cfg.hKXK'
+theorem sbtw_K'KA : Sbtw ℝ cfg.K' cfg.K cfg.A := cfg.symm.sbtw_L'LB
 
 theorem h_B_L_L' : cfg.B ∈ affineSpan ℝ {cfg.L, cfg.L'} := by
   have h1 := Sphere.secondInter_collinear cfg.sphere_A cfg.L cfg.X
@@ -292,17 +295,7 @@ theorem h_B_L_L' : cfg.B ∈ affineSpan ℝ {cfg.L, cfg.L'} := by
   repeat simp only [Set.mem_insert_iff, Set.mem_singleton_iff, true_or, or_true]
   exact cfg.L_ne_L'
 
-theorem h_A_K_K' : cfg.A ∈ affineSpan ℝ {cfg.K, cfg.K'} := by
-  have h := Sphere.secondInter_collinear cfg.sphere_B cfg.K cfg.X
-  have h2:= cfg.Sbtw_AKX.wbtw.collinear
-  have h3: Collinear ℝ {cfg.A, cfg.K', cfg.K, cfg.X} := by
-    apply collinear_insert_insert_of_collinear_collinear_ne h2 ?_ cfg.Sbtw_AKX.ne_right
-    rw [Set.insert_comm]
-    rw [Set.pair_comm]
-    exact h
-  apply h3.mem_affineSpan_of_mem_of_ne
-  repeat simp only [Set.mem_insert_iff, Set.mem_singleton_iff, true_or, or_true]
-  exact cfg.K_ne_K'
+theorem h_A_K_K' : cfg.A ∈ affineSpan ℝ {cfg.K, cfg.K'} := cfg.symm.h_B_L_L'
 
 theorem power_B_A : (dist cfg.B cfg.C) ^ 2 = dist cfg.B cfg.L * dist cfg.B cfg.L' := by
   apply EuclideanGeometry.Sphere.dist_sq_eq_mul_dist_of_tangent_and_secant cfg.h_L_A cfg.h_L'_A
@@ -312,15 +305,8 @@ theorem power_B_A : (dist cfg.B cfg.C) ^ 2 = dist cfg.B cfg.L * dist cfg.B cfg.L
   rw [sphere_a]
   exact cfg.angle_BCA
 
-theorem power_A_B : (dist cfg.A cfg.C) ^ 2 = dist cfg.A cfg.K * dist cfg.A cfg.K' := by
-  apply EuclideanGeometry.Sphere.dist_sq_eq_mul_dist_of_tangent_and_secant cfg.h_K_B cfg.h_K'_B
-    cfg.h_A_K_K'
-  rw [Set.pair_comm]
-  apply EuclideanGeometry.Sphere.IsTangentAt_of_angle_eq_pi_div_two ?_ cfg.C_mem_sphere_B
-  rw [sphere_b]
-  simp only
-  rw [angle_comm]
-  exact cfg.angle_BCA
+theorem power_A_B : (dist cfg.A cfg.C) ^ 2 = dist cfg.A cfg.K * dist cfg.A cfg.K' :=
+  cfg.symm.power_B_A
 
 variable [hd2 : Fact (finrank ℝ V = 2)]
 theorem cosphereic_set_ω :
