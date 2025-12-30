@@ -240,8 +240,8 @@ theorem AffineSubspace.Sbtw.oangle_sign_eq_of_sbtw_sbtw'
     ← Sbtw.oangle_sign_eq_left p₃ hp₂₄, Sbtw.oangle_eq_left hp₁₃.symm]
 
 theorem cospherical_of_mul_dist_eq_mul_dist_of_angle_eq_pi [Fact (Module.finrank ℝ V = 2)]
-    [Module.Oriented ℝ V (Fin 2)] {a b c d p : Pt} (hn : ¬ Collinear ℝ ({a, p, c} : Set Pt))
-    (hapb : ∠ a p b = π) (hcpd : ∠ c p d = π) (h : dist a p * dist b p = dist c p * dist d p) :
+    [Module.Oriented ℝ V (Fin 2)] {a b c d p : Pt} (h : dist a p * dist b p = dist c p * dist d p)
+    (hapb : ∠ a p b = π) (hcpd : ∠ c p d = π) (hn : ¬ Collinear ℝ ({a, p, c} : Set Pt)) :
     Cospherical ({a, b, c, d} : Set Pt) := by
   suffices h_equiv : Cospherical ({a, b, d, c} : Set Pt) by
     grind [Set.pair_comm d c]
