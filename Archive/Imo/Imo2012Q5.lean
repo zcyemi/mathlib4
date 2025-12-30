@@ -128,6 +128,9 @@ theorem dist_CB_eq_radius_B : dist cfg.C cfg.B = cfg.sphere_B.radius := cfg.symm
 def v_XK := cfg.X -ᵥ cfg.K
 def v_XL := cfg.X -ᵥ cfg.L
 
+lemma v_XK_def : cfg.X -ᵥ cfg.K = cfg.v_XK := by rfl
+lemma v_XL_def : cfg.X -ᵥ cfg.L = cfg.v_XL := by rfl
+
 
 theorem K_mem_sphere_B : cfg.K ∈ cfg.sphere_B := by
   apply mem_sphere.mpr
@@ -140,6 +143,9 @@ theorem L_mem_sphere_A : cfg.L ∈ cfg.sphere_A := cfg.symm.K_mem_sphere_B
 
 def K' := cfg.sphere_B.secondInter cfg.K cfg.v_XK
 def L' := cfg.sphere_A.secondInter cfg.L cfg.v_XL
+
+lemma K'_def :  cfg.sphere_B.secondInter cfg.K cfg.v_XK = cfg.K' := by rfl
+lemma L'_def :  cfg.sphere_A.secondInter cfg.L cfg.v_XL = cfg.L' := by rfl
 
 theorem symm_K'_eq_L' : cfg.symm.K' = cfg.L' := by rfl
 theorem symm_L'_eq_K' : cfg.symm.L' = cfg.K' := by rfl
@@ -167,8 +173,10 @@ theorem dist_X_sphere_B : dist cfg.X cfg.sphere_B.center < cfg.sphere_B.radius :
   rw [dist_comm]
   have : cfg.sphere_B.radius = dist cfg.B cfg.C := by rfl
   simp_rw [this, cfg.sphere_b]
-  apply Sbtw.dist_lt_of_angle_eq_pi_div_two cfg.Sbtw_CXD.symm
-  rw [angle_comm, h_BDX_eq_BDC, angle_comm, h_angle_CDB]
+  apply dist_lt_of_sbtw_of_inner_eq_zero cfg.Sbtw_CXD.symm
+  rw [InnerProductGeometry.inner_eq_zero_iff_angle_eq_pi_div_two]
+  rw [← EuclideanGeometry.angle]
+  rw [cfg.h_BDX_eq_BDC, angle_comm, h_angle_CDB]
 
 theorem dist_X_sphere_A : dist cfg.X cfg.sphere_A.center < cfg.sphere_A.radius :=
   cfg.symm.dist_X_sphere_B
@@ -287,10 +295,11 @@ theorem h_B_L_L' : cfg.B ∈ affineSpan ℝ {cfg.L, cfg.L'} := by
   have h1 := Sphere.secondInter_collinear cfg.sphere_A cfg.L cfg.X
   have h2:= cfg.Sbtw_BLX.wbtw.collinear
   have h3: Collinear ℝ {cfg.B, cfg.L', cfg.L, cfg.X} := by
-    apply collinear_insert_insert_of_collinear_collinear_ne h2 ?_ cfg.Sbtw_BLX.ne_right
-    rw [Set.insert_comm]
-    rw [Set.pair_comm]
-    exact h1
+    have h_L_ne_X : cfg.L ≠ cfg.X := cfg.Sbtw_BLX.ne_right
+    apply collinear_insert_insert_of_mem_affineSpan_pair
+    · grind [Collinear.mem_affineSpan_of_mem_of_ne]
+    · rw [cfg.v_XL_def, cfg.L'_def] at h1
+      grind [Collinear.mem_affineSpan_of_mem_of_ne]
   apply h3.mem_affineSpan_of_mem_of_ne
   repeat simp only [Set.mem_insert_iff, Set.mem_singleton_iff, true_or, or_true]
   exact cfg.L_ne_L'
@@ -339,7 +348,7 @@ theorem h_power_ω_B : cfg.sphere_ω.power cfg.B = dist cfg.B cfg.L * dist cfg.B
     rw [AffineSubspace.mem_perpBisector_iff_dist_eq]
     rw [dist_comm _ cfg.L, dist_comm _ cfg.L']
     exact dist_center_eq_dist_center_of_mem_sphere cfg.h_L' cfg.h_L
-  have := EuclideanGeometry.Sbtw.dist_lt_dist_perpbisector cfg.sbtw_L'LB h1
+  have := dist_lt_of_sbtw_of_mem_perpBisector cfg.sbtw_L'LB h1
   have h2: dist cfg.sphere_ω.center cfg.L = cfg.sphere_ω.radius := by
     rw [dist_comm]
     exact mem_sphere.mp cfg.h_L
@@ -353,7 +362,7 @@ theorem h_power_ω_A : cfg.sphere_ω.power cfg.A = dist cfg.A cfg.K * dist cfg.A
     rw [AffineSubspace.mem_perpBisector_iff_dist_eq]
     rw [dist_comm _ cfg.K, dist_comm _ cfg.K']
     exact dist_center_eq_dist_center_of_mem_sphere cfg.h_K' cfg.h_K
-  have := EuclideanGeometry.Sbtw.dist_lt_dist_perpbisector cfg.sbtw_K'KA h1
+  have := dist_lt_of_sbtw_of_mem_perpBisector cfg.sbtw_K'KA h1
   have h2: dist cfg.sphere_ω.center cfg.K = cfg.sphere_ω.radius := by
     rw [dist_comm]
     exact mem_sphere.mp cfg.h_K
@@ -361,12 +370,12 @@ theorem h_power_ω_A : cfg.sphere_ω.power cfg.A = dist cfg.A cfg.K * dist cfg.A
   exact le_of_lt this
 
 theorem h_tangent_at_K_ω : cfg.sphere_ω.IsTangentAt cfg.K (line[ℝ, cfg.B, cfg.K]) := by
-  apply EuclideanGeometry.Sphere.is_tangentAt_of_dist_sq_eq_power cfg.h_K
+  rw [EuclideanGeometry.Sphere.isTangentAt_iff_dist_sq_eq_power cfg.h_K]
   rw [h_power_ω_B, cfg.BK_eq_BC]
   exact cfg.power_B_A
 
 theorem h_tangent_at_L_ω : cfg.sphere_ω.IsTangentAt cfg.L (line[ℝ, cfg.A, cfg.L]) := by
-  apply EuclideanGeometry.Sphere.is_tangentAt_of_dist_sq_eq_power cfg.h_L
+  rw [EuclideanGeometry.Sphere.isTangentAt_iff_dist_sq_eq_power cfg.h_L]
   rw [h_power_ω_A, cfg.AL_eq_AC]
   exact cfg.power_A_B
 
@@ -406,5 +415,5 @@ theorem imo2012_q5 [Fact (finrank ℝ V = 2)] {A B C D X K L M : Pt}
     AL_eq_AC,
     M_mem_inf_AL_BK
   }
-  exact EuclideanGeometry.Sphere.IsTangentAt.dist_eq_of_tangentFrom
+  exact EuclideanGeometry.Sphere.IsTangentAt.dist_eq_of_mem_of_mem
     cfg.h_tangent_at_K_ω (cfg.h_tangent_at_L_ω) cfg.M_mem_inf_AL_BK.2 cfg.M_mem_inf_AL_BK.1

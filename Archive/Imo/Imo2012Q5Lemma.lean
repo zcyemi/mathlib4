@@ -391,6 +391,7 @@ theorem sbtw_altitudeFoot_of_rightAngled {t : Affine.Triangle ℝ Pt}
     simp at h_sum
     have h_sum_ne : ∠ D I J ≠ 0 := by
       apply angle_ne_zero_of_not_collinear
+
       rw[← affineIndependent_iff_not_collinear_set] at *
       apply AffineIndependent_reverse
       apply AffineIndependent_comm_left at not_col
@@ -533,66 +534,6 @@ theorem Triangle.mem_interior_of_sbtw_interior {O P: Pt}
   P ∈ t.interior := by
   sorry
 
-theorem Sbtw.dist_lt_of_inner_eq_zero {a b c p: Pt}
-    (h_sbtw: Sbtw ℝ a b c)
-    (h_inner : ⟪p -ᵥ a, b -ᵥ a⟫ = 0) :
-    dist p b < dist p c := by
-  obtain ⟨t, ht_mem, hb_eq⟩ := h_sbtw.mem_image_Ioo
-  rw [Set.mem_Ioo] at ht_mem
-  obtain ⟨ht0, ht1⟩ := ht_mem
-  have hb : b -ᵥ a = t • (c -ᵥ a) := by
-    rw [← hb_eq, AffineMap.lineMap_apply]
-    simp only [vadd_vsub]
-  have hpc : ⟪p -ᵥ a, c -ᵥ a⟫ = 0 := by
-    have h_eq : ⟪p -ᵥ a, t • (c -ᵥ a)⟫ = 0 := by rwa [←hb]
-    rw [inner_smul_right] at h_eq
-    have ht_ne_zero : t ≠ 0 := ne_of_gt ht0
-    rwa [mul_eq_zero, or_iff_right ht_ne_zero] at h_eq
-  have hb_sq : dist p b ^ 2 = dist p a ^ 2 + t^2 * ‖c -ᵥ a‖^2 := by
-    rw [dist_eq_norm_vsub, dist_eq_norm_vsub, ← real_inner_self_eq_norm_sq, ← real_inner_self_eq_norm_sq]
-    have h_eq : p -ᵥ b = (p -ᵥ a) - (b -ᵥ a) := by simp only [vsub_sub_vsub_cancel_right]
-    rw [h_eq, hb, inner_sub_left, inner_sub_right, inner_sub_right]
-    rw [inner_smul_right, inner_smul_left, inner_smul_left, inner_smul_right]
-    rw [real_inner_comm (p -ᵥ a) (c -ᵥ a), hpc]
-    simp
-
-    sorry
-    -- rw [real_inner_self_eq_norm_sq (c -ᵥ a)]
-    -- ring
-  have hc_sq : dist p c ^ 2 = dist p a ^ 2 + ‖c -ᵥ a‖^2 := by
-    rw [dist_eq_norm_vsub, dist_eq_norm_vsub, ← real_inner_self_eq_norm_sq, ← real_inner_self_eq_norm_sq]
-    have h_eq : p -ᵥ c = (p -ᵥ a) - (c -ᵥ a) := by simp only [vsub_sub_vsub_cancel_right]
-    rw [h_eq, inner_sub_left, inner_sub_right, inner_sub_right]
-    rw [real_inner_comm (p -ᵥ a) (c -ᵥ a), hpc]
-    simp
-    -- rw [real_inner_self_eq_norm_sq (c -ᵥ a)]
-  have hpos : 0 < ‖c -ᵥ a‖^2 := by
-    have hne : c ≠ a := h_sbtw.left_ne_right.symm
-    rw [← real_inner_self_eq_norm_sq]
-    rw [real_inner_self_pos]
-    rwa [vsub_ne_zero]
-  have h_sq_lt : dist p b ^ 2 < dist p c ^ 2 := by
-    rw [hb_sq, hc_sq]
-    have h_t_sq_lt : t^2 < 1 := by
-      rw [sq_lt_one_iff₀ ht0.le]
-      exact ht1
-    linarith [mul_lt_mul_of_pos_right h_t_sq_lt hpos]
-  have h_pos_pb : 0 ≤ dist p b := dist_nonneg
-  have h_pos_pc : 0 ≤ dist p c := dist_nonneg
-  rwa [← Real.sqrt_lt_sqrt_iff, Real.sqrt_sq h_pos_pb, Real.sqrt_sq h_pos_pc] at h_sq_lt
-  exact sq_nonneg (dist p b)
-
-theorem Sbtw.dist_lt_of_angle_eq_pi_div_two {a b c p: Pt}
-    (h_sbtw: Sbtw ℝ a b c)
-    (h_angle : ∠ b a p = π / 2) :
-    dist p b < dist p c := by
-  have h_inner : ⟪p -ᵥ a, b -ᵥ a⟫ = 0 := by
-    rw [InnerProductGeometry.inner_eq_zero_iff_angle_eq_pi_div_two]
-    rw [← EuclideanGeometry.angle]
-    rw [angle_comm]
-    exact h_angle
-  exact Sbtw.dist_lt_of_inner_eq_zero h_sbtw h_inner
-
 theorem sbtw_expand {a b c d : Pt}
     (h₁ : Sbtw ℝ a b c) (h₂ : Sbtw ℝ b c d) :
     Sbtw ℝ a b d := by
@@ -604,82 +545,12 @@ theorem sbtw_expand {a b c d : Pt}
   rw[← h_angle]
   exact h₁
 
-theorem collinear_insert_insert_of_collinear_collinear_ne {p₁ p₂ p₃ p₄ : Pt}
-  (h1 : Collinear ℝ {p₁, p₃, p₄}) (h2 : Collinear ℝ {p₂, p₃, p₄}) (h_ne : p₃ ≠ p₄):
-  Collinear ℝ {p₁, p₂, p₃, p₄} := by
-  have h1: p₁ ∈ affineSpan ℝ {p₃, p₄} := by
-    apply Collinear.mem_affineSpan_of_mem_of_ne h1
-    repeat aesop
-  have h2: p₂ ∈ affineSpan ℝ {p₃, p₄} := by
-    apply Collinear.mem_affineSpan_of_mem_of_ne h2
-    repeat aesop
-  exact collinear_insert_insert_of_mem_affineSpan_pair h1 h2
 
 namespace EuclideanGeometry.Sphere
-
-lemma IsTangentAt.dist_eq_of_tangentFrom {s : Sphere Pt} {p₁ p₂ q : Pt} {as₁ as₂ : AffineSubspace ℝ Pt}
-    (h₁ : s.IsTangentAt p₁ as₁) (h₂ : s.IsTangentAt p₂ as₂) (hq_mem₁ : q ∈ as₁) (hq_mem₂ : q ∈ as₂) :
-    dist q p₁ = dist q p₂ := by
-  have h1 := EuclideanGeometry.Sphere.IsTangentAt.dist_sq_eq_of_mem h₁ hq_mem₁
-  have h2 := EuclideanGeometry.Sphere.IsTangentAt.dist_sq_eq_of_mem h₂ hq_mem₂
-  rw [h1] at h2
-  rw [add_left_cancel_iff] at h2
-  simp at h2
-  exact h2
 
 
 end EuclideanGeometry.Sphere
 
-namespace EuclideanGeometry
-
-theorem Sbtw.dist_lt_dist_perpbisector {a b c p : Pt}
-    (h_sbtw: Sbtw ℝ a b c)
-    (hp: p ∈ AffineSubspace.perpBisector a b) :
-    dist p b < dist p c := by
-    set o := midpoint ℝ a b with o_def
-    have ho : Sbtw ℝ a o b := by
-      rw [o_def]
-      apply sbtw_midpoint_of_ne
-      exact h_sbtw.left_ne
-    have h_sbtw' : Sbtw ℝ o b c := by
-      exact Sbtw.trans_left_right h_sbtw ho
-    have h_inner : ⟪p -ᵥ o, b -ᵥ o⟫ = 0 := by
-      rw [o_def]
-      have h_perp := AffineSubspace.mem_perpBisector_iff_inner_eq_zero.mp hp
-      have h_scale : b -ᵥ midpoint ℝ a b = (1/2 : ℝ) • (b -ᵥ a) := by
-        simp only [right_vsub_midpoint, invOf_eq_inv, one_div]
-      rw [h_scale]
-      rw [inner_smul_right, h_perp, mul_zero]
-    apply Sbtw.dist_lt_of_inner_eq_zero h_sbtw' h_inner
-
-end EuclideanGeometry
-
-namespace EuclideanGeometry.Sphere
-
-lemma IsTangenAt_iff_angle_eq_pi_div_two {s : Sphere Pt} {p q : Pt} (hp : p ∈ s) :
-    s.IsTangentAt p line[ℝ, p ,q] ↔ ∠ q p s.center = π / 2 := by
-  constructor
-  · intro h
-    apply IsTangentAt.angle_eq_pi_div_two h
-    exact right_mem_affineSpan_pair ℝ p q
-  · intro h
-    exact IsTangentAt_of_angle_eq_pi_div_two h hp
-
-theorem is_tangentAt_of_dist_sq_eq_power {t p : Pt} {s : Sphere Pt} (ht : t ∈ s)
-    (h_dist_eq : dist p t ^ 2 = s.power p) :
-    s.IsTangentAt t (line[ℝ, p, t]) := by
-  have : affineSpan ℝ {p, t} = affineSpan ℝ {t, p} := by
-    rw [Set.pair_comm]
-  rw [this, IsTangenAt_iff_angle_eq_pi_div_two ht]
-  have h_pythag : dist p t ^ 2 + dist t s.center ^ 2 = dist p s.center ^ 2 := by
-    rw [h_dist_eq, EuclideanGeometry.Sphere.power, mem_sphere.mp ht]
-    ring
-  have h := dist_sq_eq_dist_sq_add_dist_sq_iff_angle_eq_pi_div_two p t s.center
-  rw [sq, sq, sq] at h_pythag
-  rw [dist_comm t s.center] at h_pythag
-  exact h.mp h_pythag.symm
-
-end EuclideanGeometry.Sphere
 
 section
 open scoped EuclideanGeometry Real
