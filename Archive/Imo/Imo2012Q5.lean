@@ -33,7 +33,6 @@ noncomputable section
 
 open RealInnerProductSpace
 
-
 structure Imo2012Q5Cfg where
   (A B C D X K L M : Pt)
   affine_indep_ABC : AffineIndependent ℝ ![A, B, C]
@@ -290,8 +289,10 @@ theorem h_K_interior : cfg.K ∈ cfg.triangle_ABC.interior := by
   exact Triangle.mem_interior_of_sbtw_interior cfg.X_mem_interior this
 
 theorem sbtw_L'LB : Sbtw ℝ cfg.L' cfg.L cfg.B := by
-  rw [sbtw_comm]
-  exact sbtw_expand cfg.Sbtw_BLX cfg.hLXL'
+  rw [sbtw_comm, ← angle_eq_pi_iff_sbtw]
+  have := angle_eq_pi_iff_sbtw.mpr cfg.Sbtw_BLX
+  grind [angle_eq_of_sbtw cfg.hLXL']
+
 theorem sbtw_K'KA : Sbtw ℝ cfg.K' cfg.K cfg.A := cfg.symm.sbtw_L'LB
 
 theorem h_B_L_L' : cfg.B ∈ affineSpan ℝ {cfg.L, cfg.L'} := by
@@ -321,15 +322,15 @@ theorem power_A_B : (dist cfg.A cfg.C) ^ 2 = dist cfg.A cfg.K * dist cfg.A cfg.K
   cfg.symm.power_B_A
 
 variable [hd2 : Fact (finrank ℝ V = 2)]
+
 theorem cosphereic_set_ω :
     Cospherical {cfg.K, cfg.K', cfg.L, cfg.L'} := by
   haveI := someOrientation V
-  apply cospherical_of_mul_dist_eq_mul_dist_of_angle_eq_pi cfg.notcol_KXL
-  · rw [angle_eq_pi_iff_sbtw]
-    exact cfg.hKXK'
-  · rw [angle_eq_pi_iff_sbtw]
-    exact cfg.hLXL'
-  · simp [cfg.hx, dist_comm]
+  have h1 := angle_eq_pi_iff_sbtw.mpr cfg.hKXK'
+  have h2 := angle_eq_pi_iff_sbtw.mpr cfg.hLXL'
+  apply cospherical_of_mul_dist_eq_mul_dist_of_angle_eq_pi ?_ h1 h2 cfg.notcol_KXL
+  grind [cfg.hx, dist_comm]
+
 
 def sphere_ω : EuclideanGeometry.Sphere Pt :=
   (cospherical_iff_exists_sphere.mp (cosphereic_set_ω (cfg := cfg))).choose

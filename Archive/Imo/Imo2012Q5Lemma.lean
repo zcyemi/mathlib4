@@ -49,7 +49,7 @@ open Module Affine Simplex EuclideanGeometry Real
 open AffineMap
 variable {ι k V P : Type*} [Fintype ι] [Ring k] [AddCommGroup V] [Module k V] [AffineSpace V P]
 
-theorem weight_lineMap_of_affineCombination_lineMap {p : ι → P}
+theorem weight_lineMap_of_affineCombination_lineMap' {p : ι → P}
     (h_indep : AffineIndependent k p)
     {q₁ q₂ q₃ : P}
     {w₁ w₂ w₃ : ι → k}
@@ -205,86 +205,6 @@ theorem affineIndependent_of_sbtw_affineIndependent'
   rw [←affineIndependent_iff_not_collinear_set]
   exact this
 
-theorem angle_eq_of_sbtw {A B P C : Pt} (h : Sbtw ℝ B P C):
-  ∠ A B P = ∠ A B C := by
-  rw [EuclideanGeometry.angle]
-  rw [EuclideanGeometry.angle]
-  have h : ∃ r : ℝ, 0 < r ∧ (P -ᵥ B) = r • (C -ᵥ B) := by
-    have hr := sbtw_iff_mem_image_Ioo_and_ne.mp h
-    obtain ⟨hr1, hr2⟩ := hr
-    simp at hr1
-    obtain ⟨r, hr1, hr2⟩ := hr1
-    rw [AffineMap.lineMap_apply] at hr2
-    use r; repeat aesop
-  obtain ⟨r, hr1,hr2⟩ := h
-  rw [hr2]
-  apply InnerProductGeometry.angle_smul_right_of_pos
-  exact hr1
-
-theorem AffineSubspace.Sbtw.oangle_sign_eq_of_sbtw_sbtw
-    [Fact (finrank ℝ V = 2)]
-    [ho : Oriented ℝ V (Fin 2)]
-    {p p₁ p₂ p₃ p₄ : Pt}
-    (hp₁₃ : Sbtw ℝ p₁ p p₃) (hp₂₄ : Sbtw ℝ p₂ p p₄) :
-    (∡ p₁ p₄ p₂).sign = (∡ p₁ p₃ p₂).sign := by
-  rw [← Sbtw.oangle_eq_right hp₂₄.symm, Sbtw.oangle_sign_eq _ hp₁₃, ← oangle_rotate_sign,
-    Sbtw.oangle_sign_eq _ hp₂₄.symm, Sbtw.oangle_eq_left hp₁₃.symm]
-
-theorem AffineSubspace.Sbtw.oangle_sign_eq_of_sbtw_sbtw'
-    [Fact (finrank ℝ V = 2)]
-    [ho : Oriented ℝ V (Fin 2)]
-    {p p₁ p₂ p₃ p₄ : Pt}
-    (hp₁₃ : Sbtw ℝ p p₁ p₃) (hp₂₄ : Sbtw ℝ p p₂ p₄) :
-    (∡ p₁ p₄ p₂).sign = (∡ p₁ p₃ p₂).sign := by
-  rw [Sbtw.oangle_eq_right hp₂₄.symm, Sbtw.oangle_sign_eq_right _ hp₁₃.symm, oangle_rotate_sign,
-    ← Sbtw.oangle_sign_eq_left p₃ hp₂₄, Sbtw.oangle_eq_left hp₁₃.symm]
-
-theorem cospherical_of_mul_dist_eq_mul_dist_of_angle_eq_pi [Fact (Module.finrank ℝ V = 2)]
-    [Module.Oriented ℝ V (Fin 2)] {a b c d p : Pt} (h : dist a p * dist b p = dist c p * dist d p)
-    (hapb : ∠ a p b = π) (hcpd : ∠ c p d = π) (hn : ¬ Collinear ℝ ({a, p, c} : Set Pt)) :
-    Cospherical ({a, b, c, d} : Set Pt) := by
-  suffices h_equiv : Cospherical ({a, b, d, c} : Set Pt) by
-    grind [Set.pair_comm d c]
-  have h_angle_eq : ∠ a p d = ∠ c p b := by
-    grind [angle_comm, angle_eq_angle_of_angle_eq_pi_of_angle_eq_pi hcpd]
-  rw [EuclideanGeometry.angle_eq_pi_iff_sbtw] at hapb hcpd
-  have h_notcol_abc : ¬ Collinear ℝ ({a, b, c} : Set Pt) := by
-    intro hcol
-    have hcol_apb := hapb.wbtw.collinear
-    suffices hcol : Collinear ℝ ({a, p, c} : Set Pt) by grind
-    suffices hcol_apcb : Collinear ℝ ({c, p, a, b} : Set Pt) by grind [Collinear.subset _ hcol_apcb]
-    apply collinear_insert_insert_of_mem_affineSpan_pair
-    · grind [Collinear.mem_affineSpan_of_mem_of_ne, hapb.left_ne_right]
-    · grind [Collinear.mem_affineSpan_of_mem_of_ne, hapb.left_ne_right]
-  apply EuclideanGeometry.cospherical_of_two_zsmul_oangle_eq_of_not_collinear ?_ h_notcol_abc
-  suffices h2 : ∡ a b c = ∡ a d c by grind
-  suffices h3 : ∠ a b c = ∠ a d c by
-    grind [oangle_eq_of_angle_eq_of_sign_eq, AffineSubspace.Sbtw.oangle_sign_eq_of_sbtw_sbtw]
-  rw [angle_comm, ← angle_eq_of_sbtw hapb.symm]
-  symm
-  rw [← angle_eq_of_sbtw hcpd.symm]
-  suffices h_sim : Similar ![a, p, d] ![c, p, b] by
-    grind [angle_comm, h_sim.angle_eq_all.right.left]
-  have h_notcol_apd : ¬ Collinear ℝ ({a, p, d} : Set Pt) := by
-    intro hcol
-    have hcol_cpd := hcpd.wbtw.collinear
-    suffices hcol : Collinear ℝ ({a, c, p, d} : Set Pt) by
-      have : Collinear ℝ ({a, p, c} : Set Pt) := by grind [Collinear.subset _ hcol]
-      exact hn this
-    apply collinear_insert_insert_of_mem_affineSpan_pair
-    · grind [Collinear.mem_affineSpan_of_mem_of_ne, hcpd.ne_right]
-    · grind [Collinear.mem_affineSpan_of_mem_of_ne, hcpd.ne_right]
-  have h_notcol_cpb : ¬ Collinear ℝ ({c, p, b} : Set Pt) := by
-    intro hcol
-    have hcol_apb := hapb.wbtw.collinear
-    suffices hcol : Collinear ℝ ({c, a, p, b} : Set Pt) by
-      have : Collinear ℝ ({a, p, c} : Set Pt) := by grind [Collinear.subset _ hcol]
-      exact hn this
-    apply collinear_insert_insert_of_mem_affineSpan_pair
-    · grind [Collinear.mem_affineSpan_of_mem_of_ne, hapb.ne_right]
-    · grind [Collinear.mem_affineSpan_of_mem_of_ne, hapb.ne_right]
-  apply similar_of_side_angle_side h_notcol_apd h_notcol_cpb h_angle_eq ?_
-  grind [dist_comm]
 
 theorem angle_point_altitudeFoot_eq_pi_div_two (t : Affine.Triangle ℝ Pt)
     {i j : Fin 3} (h : i ≠ j) :
@@ -534,16 +454,6 @@ theorem Triangle.mem_interior_of_sbtw_interior {O P: Pt}
   P ∈ t.interior := by
   sorry
 
-theorem sbtw_expand {a b c d : Pt}
-    (h₁ : Sbtw ℝ a b c) (h₂ : Sbtw ℝ b c d) :
-    Sbtw ℝ a b d := by
-  rw[← angle_eq_pi_iff_sbtw]
-  rw[← angle_eq_pi_iff_sbtw] at h₁
-  have h_angle : ∠ a b c = ∠ a b d := by
-    apply angle_eq_of_sbtw
-    exact h₂
-  rw[← h_angle]
-  exact h₁
 
 
 namespace EuclideanGeometry.Sphere
