@@ -231,10 +231,13 @@ theorem pow_X_B : -cfg.sphere_B.power cfg.X = dist cfg.X cfg.K * dist cfg.X cfg.
   have angle_XDB: ∠ cfg.X cfg.D cfg.B = π / 2 := by
     rw [angle_comm, angle_eq_of_sbtw cfg.Sbtw_CXD.symm, angle_comm]
     exact cfg.h_angle_CDB
-  have dist_lt := Sbtw.dist_lt_of_angle_eq_pi_div_two cfg.Sbtw_CXD.symm angle_XDB
-  rw [dist_comm cfg.B cfg.X] at dist_lt
-  simp_rw [sphere_b]
-  grind
+  suffices dist_lt : dist cfg.B cfg.X < dist cfg.B cfg.C by
+    simp_rw [sphere_b]
+    grind [dist_comm]
+  apply dist_lt_of_sbtw_of_inner_eq_zero cfg.Sbtw_CXD.symm
+  rw [InnerProductGeometry.inner_eq_zero_iff_angle_eq_pi_div_two]
+  rw [← EuclideanGeometry.angle]
+  grind [angle_comm]
 
 theorem pow_X_A : -cfg.sphere_A.power cfg.X = dist cfg.X cfg.L * dist cfg.X cfg.L' :=
   cfg.symm.pow_X_B
