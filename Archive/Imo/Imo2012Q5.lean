@@ -163,8 +163,7 @@ theorem h_angle_CDB : ∠ cfg.C cfg.D cfg.B = π / 2 := by
 theorem h_angle_CDA : ∠ cfg.C cfg.D cfg.A = π / 2 := cfg.symm.h_angle_CDB
 
 theorem h_BDX_eq_BDC : ∠ cfg.B cfg.D cfg.X = ∠ cfg.B cfg.D cfg.C := by
-  apply angle_eq_of_sbtw
-  exact cfg.Sbtw_CXD.symm
+  exact Sbtw.angle_eq_right _ cfg.Sbtw_CXD.symm
 
 theorem h_ADX_eq_ADC : ∠ cfg.A cfg.D cfg.X = ∠ cfg.A cfg.D cfg.C := cfg.symm.h_BDX_eq_BDC
 
@@ -228,7 +227,7 @@ theorem pow_X_B : -cfg.sphere_B.power cfg.X = dist cfg.X cfg.K * dist cfg.X cfg.
   rw [Sphere.mul_dist_eq_neg_power_of_dist_center_le_radius cfg.h_sphere_B_radius
     cfg.hKXK'.wbtw.mem_affineSpan cfg.h_K_B cfg.h_K'_B]
   have angle_XDB: ∠ cfg.X cfg.D cfg.B = π / 2 := by
-    rw [angle_comm, angle_eq_of_sbtw cfg.Sbtw_CXD.symm, angle_comm]
+    rw [angle_comm, cfg.h_BDX_eq_BDC, angle_comm]
     exact cfg.h_angle_CDB
   suffices dist_lt : dist cfg.B cfg.X < dist cfg.B cfg.C by
     simp_rw [sphere_b]
@@ -291,7 +290,7 @@ theorem h_K_interior : cfg.K ∈ cfg.triangle_ABC.interior := by
 theorem sbtw_L'LB : Sbtw ℝ cfg.L' cfg.L cfg.B := by
   rw [sbtw_comm, ← angle_eq_pi_iff_sbtw]
   have := angle_eq_pi_iff_sbtw.mpr cfg.Sbtw_BLX
-  grind [angle_eq_of_sbtw cfg.hLXL']
+  grind [Sbtw.angle_eq_right _ cfg.hLXL']
 
 theorem sbtw_K'KA : Sbtw ℝ cfg.K' cfg.K cfg.A := cfg.symm.sbtw_L'LB
 
