@@ -10,6 +10,7 @@ import Mathlib.Geometry.Euclidean.Altitude
 import Mathlib.Geometry.Euclidean.Angle.Unoriented.Basic
 import Mathlib.Geometry.Euclidean.Triangle
 import Mathlib.Geometry.Euclidean.Similarity
+import Mathlib.LinearAlgebra.AffineSpace.Ordered
 
 import Mathlib.Tactic
 
@@ -42,86 +43,6 @@ open scoped RealInnerProductSpace
 variable {V Pt : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [MetricSpace Pt]
 variable [NormedAddTorsor V Pt]
 
-section affineCombination
-
-open Finset
-open Module Affine Simplex EuclideanGeometry Real
-open AffineMap
-variable {ι k V P : Type*} [Fintype ι] [Ring k] [AddCommGroup V] [Module k V] [AffineSpace V P]
-
-theorem weight_lineMap_of_affineCombination_lineMap' {p : ι → P}
-    (h_indep : AffineIndependent k p)
-    {q₁ q₂ q₃ : P}
-    {w₁ w₂ w₃ : ι → k}
-    (hq₁ : q₁ = affineCombination k univ p w₁)
-    (hq₂ : q₂ = affineCombination k univ p w₂)
-    (hq₃ : q₃ = affineCombination k univ p w₃)
-    (hw₁ : ∑ i, w₁ i = 1) (hw₂ : ∑ i, w₂ i = 1) (hw₃ : ∑ i, w₃ i = 1)
-    {c : k}
-    (hline : q₂ = (AffineMap.lineMap q₁ q₃) c) :
-    ∀ i, w₂ i = lineMap (w₁ i) (w₃ i) c := by
-
-  set b := q₁
-
-  have h1:= sum_smul_vsub_const_eq_affineCombination_vsub univ w₁ p b hw₁
-  have h2:= sum_smul_vsub_const_eq_affineCombination_vsub univ w₂ p b hw₂
-  have h3:= sum_smul_vsub_const_eq_affineCombination_vsub univ w₃ p b hw₃
-
-  have hline_vsub := lineMap_vsub q₁ q₃ b c
-  rw [← hline, lineMap_apply] at hline_vsub
-  rw [← hq₁] at h1
-  rw [← hq₂] at h2
-  rw [← hq₃] at h3
-
-  rw [← h1, ← h2, ← h3, eq_vadd_iff_vsub_eq] at hline_vsub
-
-  simp_rw [vsub_eq_sub, smul_sub, smul_sum, ← Finset.sum_sub_distrib] at hline_vsub
-  conv_lhs at hline_vsub =>
-    enter [2]
-    ext x
-    rw [← sub_smul]
-  conv_rhs at hline_vsub =>
-    enter [2]
-    ext x
-    rw [← smul_sub, ← sub_smul, smul_smul]
-  apply sub_eq_zero.mpr at hline_vsub
-  rw [←sum_sub_distrib] at hline_vsub
-  conv_lhs at hline_vsub =>
-    enter [2]
-    ext x
-    rw [← sub_smul]
-  set f := fun x => (w₂ x - w₁ x - c * (w₃ x - w₁ x)) with f_def
-  have hf : ∀ (x : ι), f x = (w₂ x - w₁ x - c * (w₃ x - w₁ x)) :=by aesop
-  conv_lhs at hline_vsub =>
-    enter [2]
-    ext x
-    rw [←hf x]
-  unfold AffineIndependent at h_indep
-  have hf_sum: ∑ i, f i = 0 := by
-    simp_rw [f_def]
-    conv_lhs =>
-      enter [2]
-      ext x
-      rw [mul_sub, ← sub_add]
-    simp_rw [sum_add_distrib, sum_sub_distrib, ←mul_sum]
-    rw [hw₂, hw₁, hw₃]
-    simp
-
-  have h2 := h_indep (Finset.univ) f hf_sum
-  rw [weightedVSub_eq_weightedVSubOfPoint_of_sum_eq_zero _ _ _ hf_sum b, weightedVSubOfPoint_apply] at h2
-  have h3:= h2 hline_vsub
-  simp_rw [f_def] at h3
-  conv =>
-     enter [2]
-     rw [lineMap_apply]
-  intro i
-  have h4 := h3 i
-  simp at h4
-  rw [sub_eq_iff_eq_add,sub_eq_iff_eq_add] at h4
-  simp_rw [h4, zero_add]
-  rfl
-
-end affineCombination
 
 @[simp]
 theorem AffineIndependent_reverse (a b c: Pt) (h: AffineIndependent ℝ ![a,b,c]) :
@@ -446,13 +367,133 @@ theorem affineIndependent_of_sbtw_affineIndependent {a b c d: Pt}
   rw [←affineIndependent_iff_not_collinear_set]
   exact this
 
+variable [AddCommMonoid Pt] [SMul ℝ Pt]
+
+lemma mem_interior_of_mem_openSegment_of_mem_interior_of_mem_closure
+
+  {C : Set Pt} (hconv : Convex ℝ C)
+  {x y p : Pt}
+  (hx : x ∈ interior C)
+  (hy : y ∈ closure C)
+  (hp : p ∈ openSegment ℝ y x) :
+  p ∈ interior C := by sorry
+
+
 theorem Triangle.mem_interior_of_sbtw_interior {O P: Pt}
   {t : Triangle ℝ Pt}
-  (ho: O ∈ t.interior)
+  (ho : O ∈ t.interior)
   {i : Fin 3}
   (hp : Sbtw ℝ (t.points i) P O) :
   P ∈ t.interior := by
-  sorry
+
+  set A := t.points i with a_def
+
+
+  have hmem: i ∈ Finset.univ := by simp
+  have h_single:= Finset.affineCombination_affineCombinationSingleWeights ℝ _ t.points hmem
+  have hsum_A := h_single.symm
+  rw [← a_def] at hsum_A
+  set w_A := Finset.affineCombinationSingleWeights ℝ i with wA_def
+  set hw_A := Finset.sum_affineCombinationSingleWeights ℝ _ hmem
+  simp_rw [← wA_def] at hw_A
+
+  have h_line := hp.mem_image_Ioo
+  simp only [Set.mem_image, Set.mem_Ioo] at h_line
+  rcases h_line with ⟨r, hr, hline⟩
+
+  have hO_mem: O ∈ affineSpan ℝ (Set.range t.points) := by
+    have ho1 := ho
+    rcases ho1 with ⟨w, hw, ⟨_, ho2⟩⟩
+    rw [← ho2]
+    apply affineCombination_mem_affineSpan hw
+
+  have hA_mem : A ∈ affineSpan ℝ (Set.range t.points) := by
+    rw [a_def]
+    apply mem_affineSpan
+    simp
+
+  have hP_mem: P ∈ affineSpan ℝ (Set.range t.points) := by
+    have h1: P ∈ affineSpan ℝ ({A, O} : Set Pt) :=by
+      grind [AffineMap.lineMap_mem_affineSpan_pair]
+    have hle : affineSpan ℝ ({A, O} : Set Pt) ≤ affineSpan ℝ (Set.range t.points) := by
+      grind [affineSpan_pair_le_of_mem_of_mem]
+    rw [AffineSubspace.le_def'] at hle
+    grind
+
+
+  rcases eq_affineCombination_of_mem_affineSpan_of_fintype hO_mem with ⟨w_O, hw_O, hsum_O⟩
+  rcases eq_affineCombination_of_mem_affineSpan_of_fintype hP_mem with ⟨w_P, hw_P, hsum_P⟩
+
+  rw [hsum_P]
+  rw [affineCombination_mem_interior_iff hw_P]
+
+  rw [hsum_O] at ho
+  rw [Affine.Simplex.affineCombination_mem_interior_iff hw_O] at ho
+  have h_indep:= t.independent
+
+
+  have line_eq := hline.symm
+  rw [hsum_A, hsum_O, hsum_P] at line_eq
+  have h1 := (h_indep.affineCombination_eq_lineMap_iff_weight_lineMap hw_P hw_A hw_O r).mp line_eq
+
+
+  have h_wA_eq : ∀ j : Fin 3, w_A j = 0 ∨ w_A j = 1 := by
+    intro j
+    rw [wA_def]
+    by_cases h: j = i
+    · rw [h]; simp
+    · simp [Finset.affineCombinationSingleWeights_apply_of_ne _ h]
+  have h_A_ne_O : ∀ j : Fin 3, w_A j ≠ w_O j := by
+    intro j
+    have h1:= h_wA_eq j
+    have h2:= ho j
+    grind
+  intro j
+  rw [h1]
+  have h2 {a b c: ℝ} (h_ne: a ≠ b) (ha : a ∈ Set.Icc 0 1) (hb : b ∈ Set.Ioo 0 1)
+      (hc : c ∈ Set.Ioo 0 1):
+      AffineMap.lineMap a b c ∈ Set.Ioo 0 1 := by
+    have ha0 : 0 ≤ a := ha.1
+    have h_left : 0 < (AffineMap.lineMap a b) c := by
+      by_cases h: a < b
+      have : a < (AffineMap.lineMap a b) c := by
+        rw [left_lt_lineMap_iff_lt hc.1]
+        exact h
+      exact lt_of_le_of_lt ha0 this
+      simp at h
+      have : b ≤ (AffineMap.lineMap a b) c := by
+        rw [right_le_lineMap_iff_le hc.2]
+        exact h
+      exact lt_of_lt_of_le hb.1 this
+    have h_right : (AffineMap.lineMap a b) c < 1 := by
+      by_cases h: a < b
+      have : (AffineMap.lineMap a b) c ≤ b := by
+        rw [lineMap_le_right_iff_le hc.2]
+        exact le_of_lt h
+      exact lt_of_le_of_lt this hb.2
+      simp at h
+      have : (AffineMap.lineMap a b) c < a := by
+        rw [lineMap_lt_left_iff_lt hc.1]
+        exact lt_of_le_of_ne h h_ne.symm
+      exact lt_of_lt_of_le this ha.2
+    exact ⟨h_left, h_right⟩
+  have h_wA_j : w_A j ∈ Set.Icc 0 1 :=by
+    have h_zero: ∀ j: Fin 3, 0 ≤ w_A j := by
+      intro j
+      rw [wA_def]
+      by_cases h: j = i
+      · rw [h]; simp
+      · rw [Finset.affineCombinationSingleWeights_apply_of_ne _ h]
+    have h_one : ∀ j, w_A j ≤ 1 := by
+      intro j
+      rw [wA_def]
+      by_cases h: j = i
+      · rw [h]; simp
+      · simp [Finset.affineCombinationSingleWeights_apply_of_ne _ h]
+    rw [Set.mem_Icc]
+    exact ⟨h_zero j, h_one j⟩
+  · grind
+  · grind
 
 
 
