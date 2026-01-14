@@ -280,12 +280,26 @@ theorem K_ne_K' : cfg.K ≠ cfg.K' := cfg.hKXK'.left_ne_right
 theorem h_L_interior : cfg.L ∈ cfg.triangle_ABC.interior := by
   have := cfg.Sbtw_BLX
   rw [← h_B] at this
-  exact Triangle.mem_interior_of_sbtw_interior cfg.X_mem_interior this
+  have h_line := this.mem_image_Ioo
+  simp only [Set.mem_image] at h_line
+  rcases h_line with ⟨r, hrIoo, hp_eq⟩
+  rw [← hp_eq]
+  set t := cfg.triangle_ABC
+  have h_mem: t.points 1 ∈ t.closedInterior := t.point_mem_closedInterior 1
+  exact t.mem_interior_of_lineMap_closedInterior_interior_Ioo h_mem
+    cfg.X_mem_interior hrIoo
 
 theorem h_K_interior : cfg.K ∈ cfg.triangle_ABC.interior := by
   have := cfg.Sbtw_AKX
   rw [← h_A] at this
-  exact Triangle.mem_interior_of_sbtw_interior cfg.X_mem_interior this
+  have h_line := this.mem_image_Ioo
+  simp only [Set.mem_image] at h_line
+  rcases h_line with ⟨r, hrIoo, hp_eq⟩
+  rw [← hp_eq]
+  set t := cfg.triangle_ABC
+  have h_mem: t.points 0 ∈ t.closedInterior := t.point_mem_closedInterior 0
+  exact t.mem_interior_of_lineMap_closedInterior_interior_Ioo h_mem
+    cfg.X_mem_interior hrIoo
 
 theorem sbtw_L'LB : Sbtw ℝ cfg.L' cfg.L cfg.B := by
   rw [sbtw_comm, ← angle_eq_pi_iff_sbtw]
