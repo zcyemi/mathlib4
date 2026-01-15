@@ -299,13 +299,41 @@ theorem Triangle.mem_interior_of_sbtw_sbtw {P Q : Pt}
   P ∈ t.interior := by
   sorry
 
+open scoped Finset
+
+theorem Simplex.notMem_affineSpan_face_of_exist_of_mem_interior {n m : ℕ} [NeZero n] (s: Simplex ℝ Pt n)
+    {x : Pt} (hx : x ∈ s.interior)
+    {f : Finset (Fin (n + 1))} (fs : #f = m+1) (hi : ∃ i, i ∉ f) :
+    x ∉ affineSpan ℝ (Set.range (s.face fs).points) := by
+  have h_mem : x ∈ affineSpan ℝ (Set.range s.points) := by
+    have hx1:= hx
+    rcases hx1 with ⟨w, hw, ⟨_, hx2⟩⟩
+    rw [← hx2]
+    apply affineCombination_mem_affineSpan hw
+  rcases eq_affineCombination_of_mem_affineSpan_of_fintype h_mem with ⟨w, hw, h_comb⟩
+  rw [h_comb] at hx
+  rw [Affine.Simplex.affineCombination_mem_interior_iff hw] at hx
+
+  obtain ⟨i, hi_notin⟩ := hi
+  have hi1 := hx i
+  have h1 : x ∉ (s.face fs).interior :=by
+    rw [h_comb]
+    intro h_mem_face
+    have : NeZero m := by sorry
+    rw [Affine.Simplex.affineCombination_mem_interior_face_iff_pos _ _ hw] at h_mem_face
+    obtain ⟨_, hi3⟩ := h_mem_face
+    have := hi3 i hi_notin
+    grind
+
+  suffices hi' : ∃ i ∉ f, w i ≠ 0 by
+    sorry
+
+  have h2 := (s.affineCombination_mem_closedInterior_face_iff_nonneg fs hw).mp
 
 theorem Simplex.notMem_affineSpan_faceOpposite_of_mem_interior {n:ℕ} [NeZero n] (s: Simplex ℝ Pt n)
     (i : Fin (n + 1)) {x : Pt} (hx : x ∈ s.interior) :
   x ∉ affineSpan ℝ (Set.range (s.faceOpposite i).points) := by
-  have zoer_lt: 0 < n := by
-    have := NeZero.ne n
-    positivity
+  have zoer_lt: 0 < n := by grind [NeZero.ne n]
   set fs := Finset.univ \ {i} with fs_def
   have fs_card : fs.card = n - 1 + 1 := by
     rw [Nat.sub_add_cancel (by grind)]
@@ -336,11 +364,57 @@ theorem Simplex.notMem_affineSpan_faceOpposite_of_mem_interior {n:ℕ} [NeZero n
   have h2 := (hx i).1
   linarith
 
+theorem affineIndependent_of_mem_interior_affineIndependent' {a b c p : Pt}
+  (h_indep: AffineIndependent ℝ ![a,b,c])
+  (hp: p ∈ (⟨_, h_indep⟩: Triangle ℝ Pt).interior) :
+  AffineIndependent ℝ ![a,b,p] := by
+
+  have hp_notMem : p ∉ affineSpan ℝ {a , b} := by
+    sorry
+
+  have hne : a ≠ b := ne₁₂_of_not_collinear (by
+    rw [affineIndependent_iff_not_collinear_set] at h_indep
+    exact h_indep)
+  have ha : a ∈ line[ℝ, a, b] := by grind [left_mem_affineSpan_pair]
+  have hb : b ∈ line[ℝ, a, b] := by grind [right_mem_affineSpan_pair]
+  apply affineIndependent_of_ne_of_mem_of_mem_of_notMem hne ha hb hp_notMem
+
 theorem affineIndependent_of_mem_interior_affineIndependent {a b c p : Pt}
   (h_indep: AffineIndependent ℝ ![a,b,c])
   (hp: p ∈ (⟨_, h_indep⟩: Triangle ℝ Pt).interior) :
   AffineIndependent ℝ ![a,b,p] := by
-  sorry
+  set t := (⟨_, h_indep⟩: Triangle ℝ Pt) with t_def
+  have notcol_abc: ¬ Collinear ℝ {a, b, c} := by
+    rw [affineIndependent_iff_not_collinear_set] at h_indep
+    exact h_indep
+  have hp_mem: p ∈ affineSpan ℝ (Set.range t.points) := by
+    have hp1:= hp
+    rcases hp1 with ⟨w, hw, ⟨_, hp2⟩⟩
+    rw [← hp2]
+    apply affineCombination_mem_affineSpan hw
+  rcases eq_affineCombination_of_mem_affineSpan_of_fintype hp_mem with ⟨w_P, hw_P, hsum_P⟩
+  have hp_interior:= hp
+  rw [hsum_P] at hp
+  rw [Affine.Simplex.affineCombination_mem_interior_iff hw_P] at hp
+  have hp_not_mem : p ∉ affineSpan ℝ {a , b} := by
+    have h1:= Simplex.notMem_affineSpan_faceOpposite_of_mem_interior t 2 hp_interior
+    rw [Simplex.range_faceOpposite_points] at h1
+    simp at h1
+    have h2: t.points '' {2}ᶜ = {a, b} := by
+      have h3: {2}ᶜ = ({0, 1} : Set (Fin 3)) := by
+        rw [Set.compl_eq_univ_diff]
+        grind
+      rw [h3]
+      simp [t_def]
+      aesop
+    rw [h2] at h1
+    exact h1
+  rw [affineIndependent_iff_not_collinear_set]
+  by_contra h
+  have a_ne_b : a ≠ b := ne₁₂_of_not_collinear notcol_abc
+  have hp_mem : p ∈  ({a, b, p} : Set Pt) := by aesop
+  have h2:= h.mem_affineSpan_of_mem_of_ne (by simp) (by simp) hp_mem a_ne_b
+  aesop
 
 theorem affineIndependent_of_sbtw_affineIndependent'' {a b c d: Pt}
   (hABC: AffineIndependent ℝ ![a,b,c])
@@ -361,10 +435,6 @@ theorem affineIndependent_of_sbtw_affineIndependent'' {a b c d: Pt}
   exact this
 
 variable [AddCommMonoid Pt] [SMul ℝ Pt]
-
-
-
-
 
 namespace EuclideanGeometry.Sphere
 

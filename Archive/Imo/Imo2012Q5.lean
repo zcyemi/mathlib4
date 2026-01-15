@@ -277,9 +277,6 @@ theorem X_mem_interior : cfg.X ∈ cfg.triangle_ABC.interior := by
   have hfs : #f = 0 + 1 := by grind
   have hgs : #g = 1 + 1 := by grind
 
-
-
-
   sorry
   -- apply cfg.triangle_ABC.mem_interior_of_lineMap_interior_interior_Ioo ?_ ?_
 
@@ -289,9 +286,19 @@ theorem X_mem_interior : cfg.X ∈ cfg.triangle_ABC.interior := by
   -- exact Lemma.Triangle.mem_interior_of_sbtw_sbtw cfg.triangle_ABC hne1 hne2 hne3 sbtw_ADB' sbtw_CXD'
 
 theorem indep_ABX : AffineIndependent ℝ ![cfg.A, cfg.B, cfg.X] := by
-  apply Lemma.affineIndependent_of_mem_interior_affineIndependent cfg.affine_indep_ABC
+  suffices h : cfg.X ∈ cfg.triangle_ABC.interior by
+
+    have hx : cfg.X ∉ affineSpan ℝ {cfg.A, cfg.B} := by sorry
+
+    have hA : cfg.A ∈ line[ℝ, cfg.A, cfg.B] := by simp [left_mem_affineSpan_pair]
+    have hB : cfg.B ∈ line[ℝ, cfg.A, cfg.B] := by simp [right_mem_affineSpan_pair]
+    have hne : cfg.A ≠ cfg.B := by
+      suffices hcol: ¬ Collinear ℝ {cfg.A, cfg.B, cfg.C} by
+        exact ne₁₂_of_not_collinear hcol
+      exact cfg.not_col_ABC
+    exact affineIndependent_of_ne_of_mem_of_mem_of_notMem hne hA hB hx
+
   have h:= cfg.X_mem_interior V Pt
-  rw [cfg.triangle_ABC_def] at h
   exact h
 
 theorem notcol_KXL : ¬ Collinear ℝ {cfg.K, cfg.X, cfg.L} := by
