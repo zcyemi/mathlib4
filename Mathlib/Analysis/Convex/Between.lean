@@ -724,6 +724,111 @@ lemma mem_interior_face_iff_sbtw [Nontrivial R] [NoZeroSMulDivisors R V] {n : �
     · exact (Finset.max'_pair i j).symm
     · lia
 
+open scoped Finset
+
+
+
+lemma mem_interior_of_lineMap_interior_interior_Ioo [IsStrictOrderedRing R] {n fn gn : ℕ} [NeZero n]
+    (s : Simplex R P n) {p q : P} {f g : Finset (Fin (n + 1))} (hf : #f = fn + 1) (hg : #g = gn + 1)
+    (hp : p ∈ (s.face hf).interior) (hq : q ∈ (s.face hg).interior) (hcover : f ∪ g = Finset.univ)
+    {t : R} (ht : t ∈ Set.Ioo 0 1) :
+    AffineMap.lineMap p q t ∈ s.interior := by
+  set o := AffineMap.lineMap p q t with ho
+  have hp_mem : p ∈ affineSpan R (Set.range s.points) := by sorry
+  have hq_mem : q ∈ affineSpan R (Set.range s.points) := by sorry
+
+  have ho_mem : o ∈ affineSpan R (Set.range s.points) := by
+    have ho_line := AffineMap.lineMap_mem_affineSpan_pair t p q
+    have : affineSpan R {p, q} ≤ affineSpan R (Set.range s.points) := by
+      refine affineSpan_pair_le_of_mem_of_mem hp_mem hq_mem
+    grind [AffineSubspace.le_def']
+  have ho_comb := eq_affineCombination_of_mem_affineSpan_of_fintype ho_mem
+  obtain ⟨w_o, hw_o, ho_eq⟩ := ho_comb
+  rw [ho_eq]
+  rw [affineCombination_mem_interior_iff hw_o]
+
+
+  have hp_comb := eq_affineCombination_of_mem_affineSpan_of_fintype hp_mem
+
+  obtain ⟨w_p, hw_p, hp_eq⟩ := hp_comb
+  rw [hp_eq] at hp
+  rw [s.affineCombination_mem_interior_face_iff_mem_Ioo hf hw_p] at hp
+
+
+  obtain ⟨hp1, hp2⟩ := hp
+  have hq_comb := eq_affineCombination_of_mem_affineSpan_of_fintype hq_mem
+  obtain ⟨w_q, hw_q, hq_eq⟩ := hq_comb
+  rw [hq_eq] at hq
+
+  rw [s.affineCombination_mem_interior_face_iff_mem_Ioo hg hw_q] at hq
+  obtain ⟨hq1, hq2⟩ := hq
+
+  rw [ho_eq, hp_eq, hq_eq] at ho
+  rw [s.independent.affineCombination_eq_lineMap_iff_weight_lineMap hw_o hw_p hw_q] at ho
+  simp only [Finset.mem_univ] at ho
+  simp_rw [ho]
+  intro i
+
+  rw [AffineMap.lineMap_apply_ring]
+
+  have hi : i ∈ f ∨ i ∈ g := by
+    apply Finset.mem_union.mp
+    rw [hcover]
+    grind
+
+  by_cases hi_f : i ∈ f
+  · sorry
+  · simp_rw [hi_f] at hi
+    simp at hi
+    sorry
+
+
+
+
+
+lemma mem_interior_of_lineMap_closedInterior_interior_Ioo [IsStrictOrderedRing R] {n : ℕ}
+    (s : Simplex R P n) {p q : P}
+    (hp : p ∈ s.closedInterior)
+    (hq : q ∈ s.interior) {t : R} (ht : t ∈ Set.Ioo 0 1) :
+    AffineMap.lineMap p q t ∈ s.interior := by
+  set o := AffineMap.lineMap p q t with ho
+  have ho_mem : o ∈ affineSpan R (Set.range s.points) := by
+    have ho_line := AffineMap.lineMap_mem_affineSpan_pair t p q
+    have : affineSpan R {p, q} ≤ affineSpan R (Set.range s.points) := by
+      refine affineSpan_pair_le_of_mem_of_mem ?_ ?_
+      · exact Set.mem_of_mem_of_subset hp s.closedInterior_subset_affineSpan
+      · have := Set.mem_of_mem_of_subset hq s.interior_subset_closedInterior
+        exact s.closedInterior_subset_affineSpan this
+    grind [AffineSubspace.le_def']
+  have ho_comb := eq_affineCombination_of_mem_affineSpan_of_fintype ho_mem
+  obtain ⟨w_o, hw_o, ho_eq⟩ := ho_comb
+  obtain ⟨w_p, hw_p, hwI_p, hp_eq⟩ := hp
+  obtain ⟨w_q, hw_q, hwI_q, hq_eq⟩ := hq
+  rw [ho_eq]
+  rw [affineCombination_mem_interior_iff hw_o]
+  rw [ho_eq, ← hp_eq, ← hq_eq] at ho
+  rw [s.independent.affineCombination_eq_lineMap_iff_weight_lineMap hw_o hw_p hw_q] at ho
+  simp only [Finset.mem_univ] at ho
+  simp_rw [ho]
+  intro i
+  obtain ⟨hwq₁, hwq₂⟩ := hwI_q i
+  obtain ⟨hwp₁, hwp₂⟩ := hwI_p i
+  obtain ⟨ht₁, ht₂⟩ := ht
+  have ht1 : 0 < (1 -t) :=by grind
+  have h0 : 0 < AffineMap.lineMap (w_p i) (w_q i) t := by
+    rw [AffineMap.lineMap_apply_ring]
+    positivity
+  have h1 : AffineMap.lineMap (w_p i) (w_q i) t < 1 := by
+    rw [AffineMap.lineMap_apply_ring]
+    have hle : (1 - t) * w_p i ≤ (1 - t) * 1 := by
+      apply mul_le_mul_of_nonneg_left hwp₂ ht1.le
+    have hlt : t * w_q i < t * 1 := by
+      apply mul_lt_mul_of_pos_left hwq₂ ht₁
+    have := add_lt_add_of_le_of_lt hle hlt
+    grind
+  exact Set.mem_Ioo.2 ⟨h0, h1⟩
+
+
 end Simplex
 
 end Affine
@@ -1110,7 +1215,7 @@ theorem affineIndependent_of_sbtw_affineIndependent_inv {a b c d : P}
 
 /-- Affine independence of `a`, `b`, `c` is equivalent to affine independence of `a`, `d`, `c`
    when `d` is strictly between `a` and `b`. -/
-theorem affineIndependent_iff_affineIndependent_of_sbtw {a b c d : P} {hd : Sbtw R a d b} :
+theorem affineIndependent_iff_affineIndependent_of_sbtw {a b c d : P} (hd : Sbtw R a d b) :
     AffineIndependent R ![a, b, c] ↔ AffineIndependent R ![a, d, c] :=
   ⟨affineIndependent_of_sbtw_affineIndependent hd,
   affineIndependent_of_sbtw_affineIndependent_inv hd⟩
@@ -1160,5 +1265,11 @@ theorem sbtw_midpoint_of_ne {x y : P} (h : x ≠ y) : Sbtw R x (midpoint R x y) 
   have h : midpoint R x y ≠ x := by simp [h]
   convert sbtw_pointReflection_of_ne R h
   rw [pointReflection_midpoint_left]
+
+theorem linemap_mem_Ioo' {k : Type*} [Ring k] [PartialOrder k] [IsStrictOrderedRing k]
+    {a b t x y : k} (ha : Sbtw k x a y) (hb : Sbtw k x b y) (ht : Wbtw k a t b) :
+    Sbtw k x t y := by
+
+  sorry
 
 end LinearOrderedField

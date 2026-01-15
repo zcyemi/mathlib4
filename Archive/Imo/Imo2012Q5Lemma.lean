@@ -13,7 +13,9 @@ import Mathlib.Geometry.Euclidean.Similarity
 import Mathlib.LinearAlgebra.AffineSpace.Ordered
 
 import Mathlib.Tactic
-
+set_option linter.style.commandStart false
+set_option linter.style.longLine false
+set_option linter.style.multiGoal false
 
 open Affine Affine.Simplex EuclideanGeometry Module
 
@@ -27,8 +29,13 @@ variable [NormedAddCommGroup V] [InnerProductSpace ℝ V] [MetricSpace Pt]
 variable [NormedAddTorsor V Pt]
 
 
+namespace Lemma
+
+set_option linter.flexible false in
 
 noncomputable section
+
+
 
 -- Lemmas from test.lean
 
@@ -139,7 +146,6 @@ theorem angle_point_altitudeFoot_eq_pi_div_two (t : Affine.Triangle ℝ Pt)
       ?_
     rw [← direction_affineSpan, ← Affine.Simplex.range_faceOpposite_points]
     exact vsub_orthogonalProjection_mem_direction_orthogonal _ _
-
   unfold  EuclideanGeometry.angle
   rw [InnerProductGeometry.angle_comm]
   exact (InnerProductGeometry.inner_eq_zero_iff_angle_eq_pi_div_two _ _).mp h
@@ -156,14 +162,12 @@ theorem sbtw_altitudeFoot_of_rightAngled {t : Affine.Triangle ℝ Pt}
       intro x y hxy
       fin_cases x <;> fin_cases y <;> simp at hxy <;> grind
     set f : Fin 3 ↪ Fin 3 := { toFun := ![i, j, k], inj' := f_inj } with f_def
-
     have h: ![t.points i, t.points j, t.points k] = t.points ∘ f := by
       ext x
       fin_cases x <;> simp [f_def]
     rw [h]
     have h_indep := t.independent
     apply h_indep.comp_embedding
-
   have h_col : Collinear ℝ { t.points i, t.altitudeFoot j,t.points k} := by
     have h:= t.altitudeFoot_mem_affineSpan_faceOpposite j
     have h1: Set.range (t.faceOpposite j).points = {t.points i, t.points k} :=by
@@ -175,32 +179,25 @@ theorem sbtw_altitudeFoot_of_rightAngled {t : Affine.Triangle ℝ Pt}
     rw [Set.insert_comm]
     apply collinear_insert_of_mem_affineSpan_pair
     exact h
-
   have h1 := Collinear.wbtw_or_wbtw_or_wbtw h_col
-
   set D:= t.altitudeFoot j with D_def
   set I:= t.points i with I_def
   set J:= t.points j with J_def
   set K:= t.points k with K_def
-
   have angle_JDI : angle J D I = π / 2 := by
     rw [D_def]
     exact angle_point_altitudeFoot_eq_pi_div_two t hij.symm
-
   have angle_JDK : angle J D K= π / 2 := by
     rw [D_def]
     exact angle_point_altitudeFoot_eq_pi_div_two t hjk
-
   have dist_DK_sq := (dist_sq_eq_dist_sq_add_dist_sq_iff_angle_eq_pi_div_two J D K).mpr angle_JDK
   have dist_DI_sq := (dist_sq_eq_dist_sq_add_dist_sq_iff_angle_eq_pi_div_two J D I).mpr angle_JDI
   have dist_IK_sq := (dist_sq_eq_dist_sq_add_dist_sq_iff_angle_eq_pi_div_two I J K).mpr h_angle
   simp_rw [← pow_two] at dist_DK_sq dist_IK_sq dist_DI_sq
   rw [dist_comm J I] at dist_DI_sq
-
   have ne_IJ : I ≠ J := ne₁₂_of_not_collinear not_col
   have ne_JK : J ≠ K := ne₂₃_of_not_collinear not_col
   have ne_IK : I ≠ K := ne₁₃_of_not_collinear not_col
-
   have D_ne_I : D ≠ I := by
     intro h
     rw [← h] at h_angle
@@ -222,7 +219,6 @@ theorem sbtw_altitudeFoot_of_rightAngled {t : Affine.Triangle ℝ Pt}
       exact ne_IK.symm
     apply h_sum_ne at h_sum
     exact h_sum
-
   have h_D_ne_right : D ≠ K := by
     intro h
     rw [← h, angle_comm] at h_angle
@@ -232,7 +228,6 @@ theorem sbtw_altitudeFoot_of_rightAngled {t : Affine.Triangle ℝ Pt}
     simp at h_sum
     have h_sum_ne : ∠ D I J ≠ 0 := by
       apply angle_ne_zero_of_not_collinear
-
       rw[← affineIndependent_iff_not_collinear_set] at *
       apply AffineIndependent_reverse
       apply AffineIndependent_comm_left at not_col
@@ -244,7 +239,6 @@ theorem sbtw_altitudeFoot_of_rightAngled {t : Affine.Triangle ℝ Pt}
       exact ne_IK
     apply h_sum_ne at h_sum
     exact h_sum
-
   have dist_DK_lt : dist K D ^ 2  < dist I K ^ 2 := by
     have h_JD : 0 < dist J D ^ 2 := by
       apply pow_two_pos_of_ne_zero
@@ -259,7 +253,6 @@ theorem sbtw_altitudeFoot_of_rightAngled {t : Affine.Triangle ℝ Pt}
     rw [dist_ne_zero]
     exact ne_IJ
   rw [pow_lt_pow_iff_left₀ (by simp) (by simp) (by simp)] at dist_DK_lt
-
   have dist_DI_lt : dist I D ^ 2  < dist I K ^ 2 := by
     have h_JD : 0 < dist J D ^ 2 := by
       apply pow_two_pos_of_ne_zero
@@ -275,7 +268,6 @@ theorem sbtw_altitudeFoot_of_rightAngled {t : Affine.Triangle ℝ Pt}
     rw [dist_ne_zero]
     exact ne_JK.symm
   rw [pow_lt_pow_iff_left₀ (by simp) (by simp) (by simp)] at dist_DI_lt
-
   rcases h1 with h1 | h1 | h1
   · exact ⟨h1, D_ne_I, h_D_ne_right⟩
   · have := h1.dist_add_dist
@@ -306,6 +298,7 @@ theorem Triangle.mem_interior_of_sbtw_sbtw {P Q : Pt}
   (hP: Sbtw ℝ (t.points i) P Q) :
   P ∈ t.interior := by
   sorry
+
 
 theorem Simplex.notMem_affineSpan_faceOpposite_of_mem_interior {n:ℕ} [NeZero n] (s: Simplex ℝ Pt n)
     (i : Fin (n + 1)) {x : Pt} (hx : x ∈ s.interior) :
@@ -349,7 +342,7 @@ theorem affineIndependent_of_mem_interior_affineIndependent {a b c p : Pt}
   AffineIndependent ℝ ![a,b,p] := by
   sorry
 
-theorem affineIndependent_of_sbtw_affineIndependent {a b c d: Pt}
+theorem affineIndependent_of_sbtw_affineIndependent'' {a b c d: Pt}
   (hABC: AffineIndependent ℝ ![a,b,c])
   (hd: Sbtw ℝ a d b) :
   AffineIndependent ℝ ![a, d, c] := by
@@ -383,4 +376,9 @@ section
 open scoped EuclideanGeometry Real
 open EuclideanGeometry
 
+
 end
+
+end
+
+end Lemma

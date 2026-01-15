@@ -510,16 +510,6 @@ lemma affineCombination_mem_interior_face_iff_pos [IsOrderedAddMonoid k] {n : �
   obtain ⟨j, hj, hji⟩ := fs.exists_mem_ne (by grind [→ NeZero.ne]) i
   exact Finset.single_lt_sum hji hi hj (hii j hj) fun t ht _ ↦ (hii t ht).le
 
-
--- lemma test {k :Type*} [CommRing k] [LinearOrder k] {a b t : k} (ha : a ∈ Set.Ico 0 1) (hb : b ∈ Set.Ioo 0 1) (ht : t ∈ Set.Ioo 0 1) :
---     AffineMap.lineMap a b t ∈ Set.Ioo 0 1 := by
---   rw [AffineMap.lineMap_apply_ring]
---   rw [Set.mem_Ioo]
---   refine ⟨?_, ?_⟩
---   · nlinarith
-
-
-
 lemma affineCombination_mem_closedInterior_face_iff_nonneg [IsOrderedAddMonoid k] {n : ℕ}
     (s : Simplex k P n) {fs : Finset (Fin (n + 1))} {m : ℕ} (h : #fs = m + 1)
     {w : Fin (n + 1) → k} (hw : ∑ i, w i = 1) :
@@ -529,6 +519,19 @@ lemma affineCombination_mem_closedInterior_face_iff_nonneg [IsOrderedAddMonoid k
   refine ⟨by grind, fun ⟨hii, hi0⟩ ↦ ⟨fun i hi ↦ ⟨hii i hi, ?_⟩, hi0⟩⟩
   rw [← hw, ← Finset.sum_subset (Finset.subset_univ fs) fun j _ ↦ hi0 j]
   exact Finset.single_le_sum (fun t ht ↦ (hii t ht)) hi
+
+
+theorem linemap_mem_Ioo' {k : Type*} [Ring k] [PartialOrder k] [IsStrictOrderedRing k]
+    {a b t x y : k} (ha : a ∈ Set.Icc x y) (hb : b ∈ Set.Ioo x y) (ht : t ∈ Set.Ioo 0 1) :
+    AffineMap.lineMap a b t ∈ Set.Ioo x y := by
+  rw [AffineMap.lineMap_apply_ring]
+  obtain ⟨ht1, ht2⟩ := ht
+  obtain ⟨ha1, ha2⟩ := ha
+  obtain ⟨hb1, hb2⟩ := hb
+  have hpos: 0 < (1 - t) := by grind
+  have hadd : (1 - t) + t = 1 := by grind
+
+  sorry
 
 
 theorem linemap_mem_Ioo {k : Type*} [Ring k] [PartialOrder k] [IsStrictOrderedRing k] {a b t : k}
@@ -545,51 +548,6 @@ theorem linemap_mem_Ioo {k : Type*} [Ring k] [PartialOrder k] [IsStrictOrderedRi
     have hlt : t * b < t * 1 :=  mul_lt_mul_of_pos_left hb2 ht1
     have := add_lt_add_of_le_of_lt hle hlt
     grind
-
-
-
-lemma mem_interior_of_lineMap_closedInterior_interior_Ioo [IsStrictOrderedRing k] {n : ℕ}
-    (s : Simplex k P n) {p q : P}
-    (hp : p ∈ s.closedInterior)
-    (hq : q ∈ s.interior) {t : k} (ht : t ∈ Set.Ioo 0 1) :
-    AffineMap.lineMap p q t ∈ s.interior := by
-  set o := AffineMap.lineMap p q t with ho
-  have ho_mem : o ∈ affineSpan k (Set.range s.points) := by
-    have ho_line := AffineMap.lineMap_mem_affineSpan_pair t p q
-    have : affineSpan k {p, q} ≤ affineSpan k (Set.range s.points) := by
-      refine affineSpan_pair_le_of_mem_of_mem ?_ ?_
-      · exact Set.mem_of_mem_of_subset hp s.closedInterior_subset_affineSpan
-      · have := Set.mem_of_mem_of_subset hq s.interior_subset_closedInterior
-        exact s.closedInterior_subset_affineSpan this
-    grind [AffineSubspace.le_def']
-  have ho_comb := eq_affineCombination_of_mem_affineSpan_of_fintype ho_mem
-  obtain ⟨w_o, hw_o, ho_eq⟩ := ho_comb
-  obtain ⟨w_p, hw_p, hwI_p, hp_eq⟩ := hp
-  obtain ⟨w_q, hw_q, hwI_q, hq_eq⟩ := hq
-  rw [ho_eq]
-  rw [affineCombination_mem_interior_iff hw_o]
-  rw [ho_eq, ← hp_eq, ← hq_eq] at ho
-  rw [s.independent.affineCombination_eq_lineMap_iff_weight_lineMap hw_o hw_p hw_q] at ho
-  simp only [mem_univ] at ho
-  simp_rw [ho]
-  intro i
-  obtain ⟨hwq₁, hwq₂⟩ := hwI_q i
-  obtain ⟨hwp₁, hwp₂⟩ := hwI_p i
-  obtain ⟨ht₁, ht₂⟩ := ht
-  have ht1 : 0 < (1 -t) :=by grind
-  have h0 : 0 < AffineMap.lineMap (w_p i) (w_q i) t := by
-    rw [AffineMap.lineMap_apply_ring]
-    positivity
-  have h1 : AffineMap.lineMap (w_p i) (w_q i) t < 1 := by
-    rw [AffineMap.lineMap_apply_ring]
-    have hle : (1 - t) * w_p i ≤ (1 - t) * 1 := by
-      apply mul_le_mul_of_nonneg_left hwp₂ ht1.le
-    have hlt : t * w_q i < t * 1 := by
-      apply mul_lt_mul_of_pos_left hwq₂ ht₁
-    have := add_lt_add_of_le_of_lt hle hlt
-
-    grind
-  exact Set.mem_Ioo.2 ⟨h0, h1⟩
 
 end Simplex
 

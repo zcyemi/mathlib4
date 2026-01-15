@@ -156,7 +156,7 @@ theorem h_sphere_B_radius : 0 ≤ cfg.sphere_B.radius := cfg.symm.h_sphere_A_rad
 theorem h_angle_CDB : ∠ cfg.C cfg.D cfg.B = π / 2 := by
   rw [cfg.D_eq_altitudeFoot]
   have h_ne: (2: Fin 3) ≠ 1 := by simp
-  have := angle_point_altitudeFoot_eq_pi_div_two cfg.triangle_ABC h_ne
+  have := Lemma.angle_point_altitudeFoot_eq_pi_div_two cfg.triangle_ABC h_ne
   rw [h_C, h_B] at this
   exact this
 
@@ -243,11 +243,14 @@ theorem pow_X_A : -cfg.sphere_A.power cfg.X = dist cfg.X cfg.L * dist cfg.X cfg.
 theorem hx : dist cfg.X cfg.K * dist cfg.X cfg.K' = dist cfg.X cfg.L * dist cfg.X cfg.L' := by
   rw [← pow_X_A, ← pow_X_B, pow_X_eq]
 
+
+open scoped Finset
+
 theorem X_mem_interior : cfg.X ∈ cfg.triangle_ABC.interior := by
   have sbtw_ADB : Sbtw ℝ cfg.A cfg.D cfg.B := by
     rw [cfg.D_eq_altitudeFoot]
     rw [← h_A, ←h_B]
-    apply sbtw_altitudeFoot_of_rightAngled (by simp) (by simp) (by simp)
+    apply Lemma.sbtw_altitudeFoot_of_rightAngled (by simp) (by simp) (by simp)
     rw [h_A, h_B, h_C, angle_comm]
     exact cfg.angle_BCA
   have hne1 : (2: Fin 3) ≠ 0 := by simp
@@ -256,11 +259,37 @@ theorem X_mem_interior : cfg.X ∈ cfg.triangle_ABC.interior := by
   have sbtw_ADB' := sbtw_ADB
   rw [←h_B, ←h_A] at sbtw_ADB'
   have sbtw_CXD' := cfg.Sbtw_CXD
-  rw [←h_C] at sbtw_CXD'
-  exact Triangle.mem_interior_of_sbtw_sbtw cfg.triangle_ABC hne1 hne2 hne3 sbtw_ADB' sbtw_CXD'
+  rw [← h_C] at sbtw_CXD'
+
+  rw [sbtw_iff_mem_image_Ioo_and_ne] at sbtw_CXD'
+  simp at sbtw_CXD'
+  rcases sbtw_CXD' with ⟨⟨r,hr,hline_X⟩, hne_CD⟩
+
+  rw [cfg.h_C] at hline_X
+
+  rw [← hline_X]
+
+  set f : Finset (Fin 3) := {(2 : Fin 3)}
+  set g : Finset (Fin 3) := {(0 : Fin 3), (1 : Fin 3)}
+
+  have hcover : f ∪ g = Finset.univ := by grind
+
+  have hfs : #f = 0 + 1 := by grind
+  have hgs : #g = 1 + 1 := by grind
+
+
+
+
+  sorry
+  -- apply cfg.triangle_ABC.mem_interior_of_lineMap_interior_interior_Ioo ?_ ?_
+
+
+
+
+  -- exact Lemma.Triangle.mem_interior_of_sbtw_sbtw cfg.triangle_ABC hne1 hne2 hne3 sbtw_ADB' sbtw_CXD'
 
 theorem indep_ABX : AffineIndependent ℝ ![cfg.A, cfg.B, cfg.X] := by
-  apply affineIndependent_of_mem_interior_affineIndependent cfg.affine_indep_ABC
+  apply Lemma.affineIndependent_of_mem_interior_affineIndependent cfg.affine_indep_ABC
   have h:= cfg.X_mem_interior V Pt
   rw [cfg.triangle_ABC_def] at h
   exact h
@@ -268,10 +297,14 @@ theorem indep_ABX : AffineIndependent ℝ ![cfg.A, cfg.B, cfg.X] := by
 theorem notcol_KXL : ¬ Collinear ℝ {cfg.K, cfg.X, cfg.L} := by
   rw [← affineIndependent_iff_not_collinear_set]
   have indep_XAB: AffineIndependent ℝ ![cfg.X, cfg.A, cfg.B] := by simp [indep_ABX]
-  have h1:= affineIndependent_of_sbtw_affineIndependent indep_XAB cfg.Sbtw_AKX.symm
+  have h1 : AffineIndependent ℝ ![cfg.X, cfg.K, cfg.B] := by
+    rw [← affineIndependent_iff_affineIndependent_of_sbtw cfg.Sbtw_AKX.symm]
+    exact indep_XAB
   have indep_XBK : AffineIndependent ℝ ![cfg.X, cfg.B, cfg.K] := by simp [h1]
-  have h2 := affineIndependent_of_sbtw_affineIndependent indep_XBK cfg.Sbtw_BLX.symm
+  have h2 : AffineIndependent ℝ ![cfg.X, cfg.L, cfg.K] :=
+    (affineIndependent_iff_affineIndependent_of_sbtw cfg.Sbtw_BLX.symm).mp indep_XBK
   simp [h2]
+
 
 theorem L_ne_L' : cfg.L ≠ cfg.L' := cfg.hLXL'.left_ne_right
 
