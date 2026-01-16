@@ -156,9 +156,10 @@ theorem h_sphere_B_radius : 0 ≤ cfg.sphere_B.radius := cfg.symm.h_sphere_A_rad
 theorem h_angle_CDB : ∠ cfg.C cfg.D cfg.B = π / 2 := by
   rw [cfg.D_eq_altitudeFoot]
   have h_ne: (2: Fin 3) ≠ 1 := by simp
-  have := Lemma.angle_point_altitudeFoot_eq_pi_div_two cfg.triangle_ABC h_ne
+  have := cfg.triangle_ABC.inner_vsub_altitudeFoot_vsub_altitudeFoot_eq_zero h_ne
+  rw [InnerProductGeometry.inner_eq_zero_iff_angle_eq_pi_div_two] at this
   rw [h_C, h_B] at this
-  exact this
+  grind [angle_comm, angle]
 
 theorem h_angle_CDA : ∠ cfg.C cfg.D cfg.A = π / 2 := cfg.symm.h_angle_CDB
 

@@ -137,15 +137,7 @@ theorem affineIndependent_of_sbtw_affineIndependent'
 theorem angle_point_altitudeFoot_eq_pi_div_two (t : Affine.Triangle ℝ Pt)
     {i j : Fin 3} (h : i ≠ j) :
     angle (t.points i) (t.altitudeFoot i) (t.points j) = π / 2 := by
-  have h : ⟪t.points j -ᵥ t.altitudeFoot i, t.points i -ᵥ t.altitudeFoot i⟫ = 0 := by
-    refine Submodule.inner_right_of_mem_orthogonal
-      (K := vectorSpan ℝ (t.points '' {i}ᶜ))
-      (vsub_mem_vectorSpan_of_mem_affineSpan_of_mem_affineSpan
-        (t.mem_affineSpan_image_iff.2 h.symm)
-        (Affine.Simplex.altitudeFoot_mem_affineSpan_image_compl _ _))
-      ?_
-    rw [← direction_affineSpan, ← Affine.Simplex.range_faceOpposite_points]
-    exact vsub_orthogonalProjection_mem_direction_orthogonal _ _
+  have h : ⟪t.points j -ᵥ t.altitudeFoot i, t.points i -ᵥ t.altitudeFoot i⟫ = 0 := t.inner_vsub_altitudeFoot_vsub_altitudeFoot_eq_zero h
   unfold  EuclideanGeometry.angle
   rw [InnerProductGeometry.angle_comm]
   exact (InnerProductGeometry.inner_eq_zero_iff_angle_eq_pi_div_two _ _).mp h
