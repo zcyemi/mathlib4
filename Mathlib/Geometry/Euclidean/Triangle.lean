@@ -8,6 +8,8 @@ module
 public import Mathlib.Analysis.Normed.Affine.AddTorsor
 public import Mathlib.Geometry.Euclidean.Angle.Oriented.Affine
 public import Mathlib.Geometry.Euclidean.Angle.Unoriented.Affine
+public import Mathlib.Geometry.Euclidean.Angle.Unoriented.Projection
+public import Mathlib.Geometry.Euclidean.Projection
 public import Mathlib.Tactic.IntervalCases
 
 /-!
@@ -507,5 +509,65 @@ lemma angle_lt_pi_div_three_of_le_of_le_of_ne {p₁ p₂ p₃ : P} (h₂₃₁ :
   · rcases hne with hne | hne | hne <;>
       rcases hne.lt_or_gt with hne | hne <;>
       linarith [angle_add_angle_add_angle_eq_pi p₃ h]
+
+
+lemma sbtw_orthogonalProjection_of_angle_ge_pi_div_two {p₁ p₂ p₃ p : P}
+    (hncol : ¬Collinear ℝ ({p₁, p₂, p₃} : Set P))
+    (h : π / 2 ≤ ∠ p₁ p₂ p₃)
+    (hp : p = orthogonalProjection (affineSpan ℝ ({p₁, p₃} : Set P)) p₂) :
+    Sbtw ℝ p₁ p p₃ := by
+
+
+  have hp₁_ne : p ≠ p₁ := by sorry
+  have hp₃_ne : p ≠ p₃ := by sorry
+
+  have h1 : ∠ p₂ p₃ p₁ < π / 2 := by
+    sorry
+  have h2 : ∠ p₂ p₁ p₃ < π / 2 := by
+    sorry
+
+  have hp1 := sameray_orthogonalProjection_vsub_of_angle_lt h1
+  have hp2 := sameray_orthogonalProjection_vsub_of_angle_lt h2
+
+  have : affineSpan ℝ {p₃, p₁} = affineSpan ℝ {p₁, p₃ } := by
+    have hs : ({p₃, p₁}: Set P) = {p₁, p₃} := by grind
+    rw [hs]
+
+
+  simp_rw [this] at hp1
+  simp_rw [← hp] at hp1 hp2
+
+  have h3 := wbtw_of_sameRay_vsub_left hp1
+  have h4 := wbtw_of_sameRay_vsub_left hp2
+
+  suffices hwbtw : Wbtw ℝ p₁ p p₃ by
+    exact ⟨hwbtw, hp₁_ne, hp₃_ne⟩
+
+
+
+  rcases h3 with hA | hB
+  · rcases h4 with hC | hD
+    · exfalso
+      have hsbtw₃₁ : Sbtw ℝ p₃ p₁ p := by
+        sorry
+      have hsbtw₁₃ : Sbtw ℝ p₁ p₃ p := by
+        sorry
+      sorry
+    · exact hD
+  · exact hB.symm
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 end EuclideanGeometry
