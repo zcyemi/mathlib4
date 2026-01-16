@@ -329,6 +329,8 @@ theorem Simplex.notMem_affineSpan_face_of_exist_of_mem_interior {n m : ℕ} [NeZ
     sorry
 
   have h2 := (s.affineCombination_mem_closedInterior_face_iff_nonneg fs hw).mp
+  sorry
+
 
 theorem Simplex.notMem_affineSpan_faceOpposite_of_mem_interior {n:ℕ} [NeZero n] (s: Simplex ℝ Pt n)
     (i : Fin (n + 1)) {x : Pt} (hx : x ∈ s.interior) :
@@ -364,57 +366,75 @@ theorem Simplex.notMem_affineSpan_faceOpposite_of_mem_interior {n:ℕ} [NeZero n
   have h2 := (hx i).1
   linarith
 
-theorem affineIndependent_of_mem_interior_affineIndependent' {a b c p : Pt}
-  (h_indep: AffineIndependent ℝ ![a,b,c])
-  (hp: p ∈ (⟨_, h_indep⟩: Triangle ℝ Pt).interior) :
-  AffineIndependent ℝ ![a,b,p] := by
+lemma Simplex.mem_interior_of_sbtw_point_face_interior {n m : ℕ } [NeZero n]
+    (s : Simplex ℝ Pt n) {i : Fin (n + 1)} {fs : Finset (Fin (n + 1))} (hfs : #fs = m + 1)
+    (hi : i ∉ fs) {p q : Pt} (hp : Sbtw ℝ (s.points i) p q) (hq : q ∈ (s.face hfs).interior) :
+    p ∈ s.interior := by
 
-  have hp_notMem : p ∉ affineSpan ℝ {a , b} := by
-    sorry
 
-  have hne : a ≠ b := ne₁₂_of_not_collinear (by
-    rw [affineIndependent_iff_not_collinear_set] at h_indep
-    exact h_indep)
-  have ha : a ∈ line[ℝ, a, b] := by grind [left_mem_affineSpan_pair]
-  have hb : b ∈ line[ℝ, a, b] := by grind [right_mem_affineSpan_pair]
-  apply affineIndependent_of_ne_of_mem_of_mem_of_notMem hne ha hb hp_notMem
+  rw [sbtw_iff_mem_image_Ioo_and_ne] at hp
+  obtain ⟨r, hr, hline_p⟩ := hp.1
 
-theorem affineIndependent_of_mem_interior_affineIndependent {a b c p : Pt}
-  (h_indep: AffineIndependent ℝ ![a,b,c])
-  (hp: p ∈ (⟨_, h_indep⟩: Triangle ℝ Pt).interior) :
-  AffineIndependent ℝ ![a,b,p] := by
-  set t := (⟨_, h_indep⟩: Triangle ℝ Pt) with t_def
-  have notcol_abc: ¬ Collinear ℝ {a, b, c} := by
-    rw [affineIndependent_iff_not_collinear_set] at h_indep
-    exact h_indep
-  have hp_mem: p ∈ affineSpan ℝ (Set.range t.points) := by
-    have hp1:= hp
-    rcases hp1 with ⟨w, hw, ⟨_, hp2⟩⟩
-    rw [← hp2]
-    apply affineCombination_mem_affineSpan hw
-  rcases eq_affineCombination_of_mem_affineSpan_of_fintype hp_mem with ⟨w_P, hw_P, hsum_P⟩
-  have hp_interior:= hp
-  rw [hsum_P] at hp
-  rw [Affine.Simplex.affineCombination_mem_interior_iff hw_P] at hp
-  have hp_not_mem : p ∉ affineSpan ℝ {a , b} := by
-    have h1:= Simplex.notMem_affineSpan_faceOpposite_of_mem_interior t 2 hp_interior
-    rw [Simplex.range_faceOpposite_points] at h1
-    simp at h1
-    have h2: t.points '' {2}ᶜ = {a, b} := by
-      have h3: {2}ᶜ = ({0, 1} : Set (Fin 3)) := by
-        rw [Set.compl_eq_univ_diff]
-        grind
-      rw [h3]
-      simp [t_def]
-      aesop
-    rw [h2] at h1
-    exact h1
-  rw [affineIndependent_iff_not_collinear_set]
-  by_contra h
-  have a_ne_b : a ≠ b := ne₁₂_of_not_collinear notcol_abc
-  have hp_mem : p ∈  ({a, b, p} : Set Pt) := by aesop
-  have h2:= h.mem_affineSpan_of_mem_of_ne (by simp) (by simp) hp_mem a_ne_b
-  aesop
+  rw [← hline_p]
+
+  have h1 : s.points i ∈ s.closedInterior := by
+    apply point_mem_closedInterior
+  sorry
+
+-- lemma mem_interior_of_lineMap_interior_interior_Ioo [IsStrictOrderedRing R] {n fn gn : ℕ} [NeZero n]
+--     (s : Simplex R P n) {p q : P} {f g : Finset (Fin (n + 1))} (hf : #f = fn + 1) (hg : #g = gn + 1)
+--     (hp : p ∈ (s.face hf).interior) (hq : q ∈ (s.face hg).interior) (hcover : f ∪ g = Finset.univ)
+--     {t : R} (ht : t ∈ Set.Ioo 0 1) :
+--     AffineMap.lineMap p q t ∈ s.interior := by
+--   set o := AffineMap.lineMap p q t with ho
+--   have hp_mem : p ∈ affineSpan R (Set.range s.points) := by sorry
+--   have hq_mem : q ∈ affineSpan R (Set.range s.points) := by sorry
+
+--   have ho_mem : o ∈ affineSpan R (Set.range s.points) := by
+--     have ho_line := AffineMap.lineMap_mem_affineSpan_pair t p q
+--     have : affineSpan R {p, q} ≤ affineSpan R (Set.range s.points) := by
+--       refine affineSpan_pair_le_of_mem_of_mem hp_mem hq_mem
+--     grind [AffineSubspace.le_def']
+--   have ho_comb := eq_affineCombination_of_mem_affineSpan_of_fintype ho_mem
+--   obtain ⟨w_o, hw_o, ho_eq⟩ := ho_comb
+--   rw [ho_eq]
+--   rw [affineCombination_mem_interior_iff hw_o]
+
+
+--   have hp_comb := eq_affineCombination_of_mem_affineSpan_of_fintype hp_mem
+
+--   obtain ⟨w_p, hw_p, hp_eq⟩ := hp_comb
+--   rw [hp_eq] at hp
+--   rw [s.affineCombination_mem_interior_face_iff_mem_Ioo hf hw_p] at hp
+
+
+--   obtain ⟨hp1, hp2⟩ := hp
+--   have hq_comb := eq_affineCombination_of_mem_affineSpan_of_fintype hq_mem
+--   obtain ⟨w_q, hw_q, hq_eq⟩ := hq_comb
+--   rw [hq_eq] at hq
+
+--   rw [s.affineCombination_mem_interior_face_iff_mem_Ioo hg hw_q] at hq
+--   obtain ⟨hq1, hq2⟩ := hq
+
+--   rw [ho_eq, hp_eq, hq_eq] at ho
+--   rw [s.independent.affineCombination_eq_lineMap_iff_weight_lineMap hw_o hw_p hw_q] at ho
+--   simp only [Finset.mem_univ] at ho
+--   simp_rw [ho]
+--   intro i
+
+--   rw [AffineMap.lineMap_apply_ring]
+
+--   have hi : i ∈ f ∨ i ∈ g := by
+--     apply Finset.mem_union.mp
+--     rw [hcover]
+--     grind
+
+--   by_cases hi_f : i ∈ f
+--   · sorry
+--   · simp_rw [hi_f] at hi
+--     simp at hi
+--     sorry
+
 
 theorem affineIndependent_of_sbtw_affineIndependent'' {a b c d: Pt}
   (hABC: AffineIndependent ℝ ![a,b,c])

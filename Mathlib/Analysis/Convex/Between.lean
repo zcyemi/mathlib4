@@ -727,65 +727,6 @@ lemma mem_interior_face_iff_sbtw [Nontrivial R] [NoZeroSMulDivisors R V] {n : �
 open scoped Finset
 
 
-
-lemma mem_interior_of_lineMap_interior_interior_Ioo [IsStrictOrderedRing R] {n fn gn : ℕ} [NeZero n]
-    (s : Simplex R P n) {p q : P} {f g : Finset (Fin (n + 1))} (hf : #f = fn + 1) (hg : #g = gn + 1)
-    (hp : p ∈ (s.face hf).interior) (hq : q ∈ (s.face hg).interior) (hcover : f ∪ g = Finset.univ)
-    {t : R} (ht : t ∈ Set.Ioo 0 1) :
-    AffineMap.lineMap p q t ∈ s.interior := by
-  set o := AffineMap.lineMap p q t with ho
-  have hp_mem : p ∈ affineSpan R (Set.range s.points) := by sorry
-  have hq_mem : q ∈ affineSpan R (Set.range s.points) := by sorry
-
-  have ho_mem : o ∈ affineSpan R (Set.range s.points) := by
-    have ho_line := AffineMap.lineMap_mem_affineSpan_pair t p q
-    have : affineSpan R {p, q} ≤ affineSpan R (Set.range s.points) := by
-      refine affineSpan_pair_le_of_mem_of_mem hp_mem hq_mem
-    grind [AffineSubspace.le_def']
-  have ho_comb := eq_affineCombination_of_mem_affineSpan_of_fintype ho_mem
-  obtain ⟨w_o, hw_o, ho_eq⟩ := ho_comb
-  rw [ho_eq]
-  rw [affineCombination_mem_interior_iff hw_o]
-
-
-  have hp_comb := eq_affineCombination_of_mem_affineSpan_of_fintype hp_mem
-
-  obtain ⟨w_p, hw_p, hp_eq⟩ := hp_comb
-  rw [hp_eq] at hp
-  rw [s.affineCombination_mem_interior_face_iff_mem_Ioo hf hw_p] at hp
-
-
-  obtain ⟨hp1, hp2⟩ := hp
-  have hq_comb := eq_affineCombination_of_mem_affineSpan_of_fintype hq_mem
-  obtain ⟨w_q, hw_q, hq_eq⟩ := hq_comb
-  rw [hq_eq] at hq
-
-  rw [s.affineCombination_mem_interior_face_iff_mem_Ioo hg hw_q] at hq
-  obtain ⟨hq1, hq2⟩ := hq
-
-  rw [ho_eq, hp_eq, hq_eq] at ho
-  rw [s.independent.affineCombination_eq_lineMap_iff_weight_lineMap hw_o hw_p hw_q] at ho
-  simp only [Finset.mem_univ] at ho
-  simp_rw [ho]
-  intro i
-
-  rw [AffineMap.lineMap_apply_ring]
-
-  have hi : i ∈ f ∨ i ∈ g := by
-    apply Finset.mem_union.mp
-    rw [hcover]
-    grind
-
-  by_cases hi_f : i ∈ f
-  · sorry
-  · simp_rw [hi_f] at hi
-    simp at hi
-    sorry
-
-
-
-
-
 lemma mem_interior_of_lineMap_closedInterior_interior_Ioo [IsStrictOrderedRing R] {n : ℕ}
     (s : Simplex R P n) {p q : P}
     (hp : p ∈ s.closedInterior)
@@ -1265,11 +1206,5 @@ theorem sbtw_midpoint_of_ne {x y : P} (h : x ≠ y) : Sbtw R x (midpoint R x y) 
   have h : midpoint R x y ≠ x := by simp [h]
   convert sbtw_pointReflection_of_ne R h
   rw [pointReflection_midpoint_left]
-
-theorem linemap_mem_Ioo' {k : Type*} [Ring k] [PartialOrder k] [IsStrictOrderedRing k]
-    {a b t x y : k} (ha : Sbtw k x a y) (hb : Sbtw k x b y) (ht : Wbtw k a t b) :
-    Sbtw k x t y := by
-
-  sorry
 
 end LinearOrderedField

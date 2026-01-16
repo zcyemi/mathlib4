@@ -261,45 +261,70 @@ theorem X_mem_interior : cfg.X ∈ cfg.triangle_ABC.interior := by
   have sbtw_CXD' := cfg.Sbtw_CXD
   rw [← h_C] at sbtw_CXD'
 
-  rw [sbtw_iff_mem_image_Ioo_and_ne] at sbtw_CXD'
-  simp at sbtw_CXD'
-  rcases sbtw_CXD' with ⟨⟨r,hr,hline_X⟩, hne_CD⟩
+  set fs : Finset (Fin 3) := {(0 : Fin 3), (1 : Fin 3)}
 
-  rw [cfg.h_C] at hline_X
+  have hfs : #fs = 2 := by grind
+  have hi : (2 : Fin 3) ∉ fs := by grind
+  have hd : cfg.D ∈ (cfg.triangle_ABC.face hfs).interior := by
+    rw [interior_eq_image_Ioo]
+    have h1: (cfg.triangle_ABC.face hfs).points 0 = cfg.A := by
+      simp_rw [face_points']
+      simp
 
-  rw [← hline_X]
+      suffices hx : (fs.orderEmbOfFin hfs) 0 = 0 by
+        rw [hx]
+        rw [cfg.triangle_ABC_def]
+        simp
+      simp_rw [fs]
 
-  set f : Finset (Fin 3) := {(2 : Fin 3)}
-  set g : Finset (Fin 3) := {(0 : Fin 3), (1 : Fin 3)}
+      rw [Finset.orderEmbOfFin_apply]
+      have h : ({0, 1}: Finset (Fin 3)).sort (· ≤ ·) = [0, 1] := by
+        native_decide
+      simp_rw [h]
+      rfl
 
-  have hcover : f ∪ g = Finset.univ := by grind
+    have h2: (cfg.triangle_ABC.face hfs).points 1 = cfg.B := by
+      sorry
+    rw [h1, h2]
 
-  have hfs : #f = 0 + 1 := by grind
-  have hgs : #g = 1 + 1 := by grind
+    have h_ne : cfg.A ≠ cfg.B := by
+      suffices hcol: ¬ Collinear ℝ {cfg.A, cfg.B, cfg.C} by
+        exact ne₁₂_of_not_collinear hcol
+      exact cfg.not_col_ABC
+    rw [sbtw_iff_mem_image_Ioo_and_ne] at sbtw_ADB
+    exact sbtw_ADB.1
 
-  sorry
-  -- apply cfg.triangle_ABC.mem_interior_of_lineMap_interior_interior_Ioo ?_ ?_
-
-
-
-
-  -- exact Lemma.Triangle.mem_interior_of_sbtw_sbtw cfg.triangle_ABC hne1 hne2 hne3 sbtw_ADB' sbtw_CXD'
+  exact Lemma.Simplex.mem_interior_of_sbtw_point_face_interior cfg.triangle_ABC hfs hi sbtw_CXD' hd
 
 theorem indep_ABX : AffineIndependent ℝ ![cfg.A, cfg.B, cfg.X] := by
-  suffices h : cfg.X ∈ cfg.triangle_ABC.interior by
-
-    have hx : cfg.X ∉ affineSpan ℝ {cfg.A, cfg.B} := by sorry
-
+  suffices h: cfg.X ∉ affineSpan ℝ {cfg.A, cfg.B} by
     have hA : cfg.A ∈ line[ℝ, cfg.A, cfg.B] := by simp [left_mem_affineSpan_pair]
     have hB : cfg.B ∈ line[ℝ, cfg.A, cfg.B] := by simp [right_mem_affineSpan_pair]
     have hne : cfg.A ≠ cfg.B := by
       suffices hcol: ¬ Collinear ℝ {cfg.A, cfg.B, cfg.C} by
         exact ne₁₂_of_not_collinear hcol
       exact cfg.not_col_ABC
-    exact affineIndependent_of_ne_of_mem_of_mem_of_notMem hne hA hB hx
-
-  have h:= cfg.X_mem_interior V Pt
-  exact h
+    have hx := cfg.X_mem_interior V Pt
+    apply affineIndependent_of_ne_of_mem_of_mem_of_notMem hne hA hB h
+  have hx_mem_interior := cfg.X_mem_interior V Pt
+  let s := cfg.triangle_ABC
+  have hx_mem : cfg.X ∈ affineSpan ℝ (Set.range s.points) := by
+    suffices hsubset : s.interior ⊆ affineSpan ℝ (Set.range s.points) by
+      exact hsubset hx_mem_interior
+    grind [s.interior_ssubset_closedInterior, s.closedInterior_subset_affineSpan]
+  rcases eq_affineCombination_of_mem_affineSpan_of_fintype hx_mem with ⟨w_x, hw_x, hcomb_x⟩
+  intro hx
+  rw [hcomb_x] at hx hx_mem_interior
+  have hset : Set.range (cfg.triangle_ABC.faceOpposite (2: Fin 3)).points = {cfg.A, cfg.B} := by
+    simp_rw [range_faceOpposite_points]
+    have h : ({2} : Set (Fin 3))ᶜ = {0, 1} := by ext x; fin_cases x <;> simp
+    simp_rw [h, cfg.triangle_ABC_def]
+    aesop
+  rw [← hset] at hx
+  rw [cfg.triangle_ABC.affineCombination_mem_affineSpan_faceOpposite_iff hw_x] at hx
+  rw [cfg.triangle_ABC.affineCombination_mem_interior_iff hw_x] at hx_mem_interior
+  have hw_2 := (hx_mem_interior 2).1
+  grind
 
 theorem notcol_KXL : ¬ Collinear ℝ {cfg.K, cfg.X, cfg.L} := by
   rw [← affineIndependent_iff_not_collinear_set]
@@ -311,7 +336,6 @@ theorem notcol_KXL : ¬ Collinear ℝ {cfg.K, cfg.X, cfg.L} := by
   have h2 : AffineIndependent ℝ ![cfg.X, cfg.L, cfg.K] :=
     (affineIndependent_iff_affineIndependent_of_sbtw cfg.Sbtw_BLX.symm).mp indep_XBK
   simp [h2]
-
 
 theorem L_ne_L' : cfg.L ≠ cfg.L' := cfg.hLXL'.left_ne_right
 

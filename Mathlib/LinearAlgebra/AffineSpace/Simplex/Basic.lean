@@ -520,20 +520,6 @@ lemma affineCombination_mem_closedInterior_face_iff_nonneg [IsOrderedAddMonoid k
   rw [← hw, ← Finset.sum_subset (Finset.subset_univ fs) fun j _ ↦ hi0 j]
   exact Finset.single_le_sum (fun t ht ↦ (hii t ht)) hi
 
-
-theorem linemap_mem_Ioo' {k : Type*} [Ring k] [PartialOrder k] [IsStrictOrderedRing k]
-    {a b t x y : k} (ha : a ∈ Set.Icc x y) (hb : b ∈ Set.Ioo x y) (ht : t ∈ Set.Ioo 0 1) :
-    AffineMap.lineMap a b t ∈ Set.Ioo x y := by
-  rw [AffineMap.lineMap_apply_ring]
-  obtain ⟨ht1, ht2⟩ := ht
-  obtain ⟨ha1, ha2⟩ := ha
-  obtain ⟨hb1, hb2⟩ := hb
-  have hpos: 0 < (1 - t) := by grind
-  have hadd : (1 - t) + t = 1 := by grind
-
-  sorry
-
-
 theorem linemap_mem_Ioo {k : Type*} [Ring k] [PartialOrder k] [IsStrictOrderedRing k] {a b t : k}
     (ha : a ∈ Set.Icc 0 1) (hb : b ∈ Set.Ioo 0 1) (ht : t ∈ Set.Ioo 0 1) :
     AffineMap.lineMap a b t ∈ Set.Ioo 0 1 := by
