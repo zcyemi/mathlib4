@@ -754,6 +754,7 @@ lemma mem_interior_of_lineMap_closedInterior_interior_Ioo [IsStrictOrderedRing R
   intro i
   obtain ⟨hwq₁, hwq₂⟩ := hwI_q i
   obtain ⟨hwp₁, hwp₂⟩ := hwI_p i
+
   obtain ⟨ht₁, ht₂⟩ := ht
   have ht1 : 0 < (1 -t) :=by grind
   have h0 : 0 < AffineMap.lineMap (w_p i) (w_q i) t := by

@@ -280,16 +280,6 @@ theorem sbtw_altitudeFoot_of_rightAngled {t : Affine.Triangle ℝ Pt}
     rw [dist_comm K I] at h2
     linarith
 
-theorem Triangle.mem_interior_of_sbtw_sbtw {P Q : Pt}
-  (t : Triangle ℝ Pt)
-  {i j k : Fin 3}
-  (h_ij : i ≠ j)
-  (h_jk : j ≠ k)
-  (h_ki : k ≠ i)
-  (hQ: Sbtw ℝ (t.points j) Q (t.points k))
-  (hP: Sbtw ℝ (t.points i) P Q) :
-  P ∈ t.interior := by
-  sorry
 
 open scoped Finset
 
@@ -358,93 +348,126 @@ theorem Simplex.notMem_affineSpan_faceOpposite_of_mem_interior {n:ℕ} [NeZero n
   have h2 := (hx i).1
   linarith
 
-lemma Simplex.mem_interior_of_sbtw_point_face_interior {n m : ℕ } [NeZero n]
-    (s : Simplex ℝ Pt n) {i : Fin (n + 1)} {fs : Finset (Fin (n + 1))} (hfs : #fs = m + 1)
-    (hi : i ∉ fs) {p q : Pt} (hp : Sbtw ℝ (s.points i) p q) (hq : q ∈ (s.face hfs).interior) :
-    p ∈ s.interior := by
+lemma Simplex.mem_interior_of_sbtw_face_interior_face_closedInterior_compl {n mf mg : ℕ }
+    [NeZero n]
+    (s : Simplex ℝ Pt n)
+    {fs gs: Finset (Fin (n + 1))}
+    (hfs : #fs = mf + 1) (hgs : #gs = mg + 1)
+    (hcompl : IsCompl fs gs)
+    {p q: Pt}
+    (hp : p ∈ (s.face hfs).interior)
+    (hq : q ∈ (s.face hgs).interior)
+    {t : ℝ} (ht : t ∈ Set.Ioo 0 1) :
+    AffineMap.lineMap p q t ∈ s.interior := by
+
+  set o := AffineMap.lineMap p q t with o_def
+
+  have ho_mem : o ∈ affineSpan ℝ (Set.range s.points) := by sorry
+
+  have hp_mem : p ∈ affineSpan ℝ (Set.range s.points) := by sorry
+
+  have hq_mem : q ∈ affineSpan ℝ (Set.range s.points) := by sorry
+
+  rcases eq_affineCombination_of_mem_affineSpan_of_fintype ho_mem with ⟨w_o, hw_o, h_comb_o⟩
+  rcases eq_affineCombination_of_mem_affineSpan_of_fintype hp_mem with ⟨w_p, hw_p, h_comb_p⟩
+  rcases eq_affineCombination_of_mem_affineSpan_of_fintype hq_mem with ⟨w_q, hw_q, h_comb_q⟩
 
 
-  rw [sbtw_iff_mem_image_Ioo_and_ne] at hp
-  obtain ⟨r, hr, hline_p⟩ := hp.1
+  rw [h_comb_o]
+  rw  [Affine.Simplex.affineCombination_mem_interior_iff hw_o]
 
-  rw [← hline_p]
+  rw [h_comb_p, h_comb_o, h_comb_q] at o_def
+  rw [s.independent.affineCombination_eq_lineMap_iff_weight_lineMap hw_o hw_p hw_q] at o_def
+  simp only [Finset.mem_univ] at o_def
+  simp_rw [o_def]
+  intro i
+  rw [AffineMap.lineMap_apply_ring]
 
-  have h1 : s.points i ∈ s.closedInterior := by
-    apply point_mem_closedInterior
-  sorry
+  rw [h_comb_p] at hp
+  rw [s.affineCombination_mem_interior_face_iff_mem_Ioo hfs hw_p] at hp
 
--- lemma mem_interior_of_lineMap_interior_interior_Ioo [IsStrictOrderedRing R] {n fn gn : ℕ} [NeZero n]
---     (s : Simplex R P n) {p q : P} {f g : Finset (Fin (n + 1))} (hf : #f = fn + 1) (hg : #g = gn + 1)
---     (hp : p ∈ (s.face hf).interior) (hq : q ∈ (s.face hg).interior) (hcover : f ∪ g = Finset.univ)
---     {t : R} (ht : t ∈ Set.Ioo 0 1) :
---     AffineMap.lineMap p q t ∈ s.interior := by
---   set o := AffineMap.lineMap p q t with ho
---   have hp_mem : p ∈ affineSpan R (Set.range s.points) := by sorry
---   have hq_mem : q ∈ affineSpan R (Set.range s.points) := by sorry
+  rw [h_comb_q] at hq
+  rw [s.affineCombination_mem_interior_face_iff_mem_Ioo hgs hw_q] at hq
 
---   have ho_mem : o ∈ affineSpan R (Set.range s.points) := by
---     have ho_line := AffineMap.lineMap_mem_affineSpan_pair t p q
---     have : affineSpan R {p, q} ≤ affineSpan R (Set.range s.points) := by
---       refine affineSpan_pair_le_of_mem_of_mem hp_mem hq_mem
---     grind [AffineSubspace.le_def']
---   have ho_comb := eq_affineCombination_of_mem_affineSpan_of_fintype ho_mem
---   obtain ⟨w_o, hw_o, ho_eq⟩ := ho_comb
---   rw [ho_eq]
---   rw [affineCombination_mem_interior_iff hw_o]
-
-
---   have hp_comb := eq_affineCombination_of_mem_affineSpan_of_fintype hp_mem
-
---   obtain ⟨w_p, hw_p, hp_eq⟩ := hp_comb
---   rw [hp_eq] at hp
---   rw [s.affineCombination_mem_interior_face_iff_mem_Ioo hf hw_p] at hp
-
-
---   obtain ⟨hp1, hp2⟩ := hp
---   have hq_comb := eq_affineCombination_of_mem_affineSpan_of_fintype hq_mem
---   obtain ⟨w_q, hw_q, hq_eq⟩ := hq_comb
---   rw [hq_eq] at hq
-
---   rw [s.affineCombination_mem_interior_face_iff_mem_Ioo hg hw_q] at hq
---   obtain ⟨hq1, hq2⟩ := hq
-
---   rw [ho_eq, hp_eq, hq_eq] at ho
---   rw [s.independent.affineCombination_eq_lineMap_iff_weight_lineMap hw_o hw_p hw_q] at ho
---   simp only [Finset.mem_univ] at ho
---   simp_rw [ho]
---   intro i
-
---   rw [AffineMap.lineMap_apply_ring]
-
---   have hi : i ∈ f ∨ i ∈ g := by
---     apply Finset.mem_union.mp
---     rw [hcover]
---     grind
-
---   by_cases hi_f : i ∈ f
---   · sorry
---   · simp_rw [hi_f] at hi
---     simp at hi
---     sorry
+  obtain ⟨hp1, hp2⟩ := hp
+  obtain ⟨hq1, hq2⟩ := hq
+  have ht1 : 1 - t ∈ Set.Ioo 0 1 := by grind
+  have hfg := hcompl.eq_compl
+  by_cases hi : i ∈ fs
+  · have hi_g : i ∉ gs := by aesop
+    simp_rw [hq2 i hi_g]
+    simp_rw [mul_zero, add_zero]
+    have := hp1 i hi
+    refine ⟨mul_pos (ht1.1) this.1, ?_⟩
+    grind [mul_lt_one_of_nonneg_of_lt_one_right]
+  · have hi_g : i ∈ gs := by aesop
+    simp_rw [hp2 i hi]
+    simp_rw [mul_zero, zero_add]
+    have := hq1 i hi_g
+    refine ⟨mul_pos ht.1 this.1, ?_⟩
+    grind [mul_lt_one_of_nonneg_of_lt_one_left]
 
 
-theorem affineIndependent_of_sbtw_affineIndependent'' {a b c d: Pt}
-  (hABC: AffineIndependent ℝ ![a,b,c])
-  (hd: Sbtw ℝ a d b) :
-  AffineIndependent ℝ ![a, d, c] := by
-  rw [affineIndependent_iff_not_collinear_set]
-  have h_collinear: Collinear ℝ {a, b, d} := by
-    have h:= hd.wbtw.collinear
-    apply Collinear.subset _ h
-    intro x hx
-    simp at hx
-    tauto
-  have h_indep: AffineIndependent ℝ ![c,a, b] := by simp [hABC]
-  have h_ad: a≠ d:= hd.left_ne
-  have h:= affineIndependent_of_affineIndependent_collinear h_indep h_collinear h_ad
-  have : AffineIndependent ℝ ![a, d, c] := by simp [h]
-  rw [←affineIndependent_iff_not_collinear_set]
-  exact this
+lemma Simplex.mem_interior_of_lineMap_point_faceOpposite_interior {n : ℕ } [NeZero n]
+    (s : Simplex ℝ Pt n) {i : Fin (n + 1)} {q : Pt} (hq : q ∈ (s.faceOpposite i).interior)
+    {t : ℝ} (ht : t ∈ Set.Ioo 0 1) :
+    AffineMap.lineMap (s.points i) q t ∈ s.interior := by
+  set p := s.points i with p_def
+  set o := AffineMap.lineMap p q t with o_def
+  have hq_mem : q ∈ affineSpan ℝ (Set.range s.points) := by
+    apply Set.mem_of_mem_of_subset hq
+    suffices h: Set.range (s.faceOpposite i).points ⊆ Set.range s.points by
+      have : (s.faceOpposite i).interior ⊆ affineSpan ℝ (Set.range (s.faceOpposite i).points) := by
+        unfold Simplex.interior
+        exact setInterior_subset_affineSpan
+      apply subset_trans this ?_
+      apply affineSpan_mono
+      exact h
+    rw [Affine.Simplex.range_faceOpposite_points]
+    simp
+  have hp_mem : p ∈ affineSpan ℝ (Set.range s.points) := by
+    rw [p_def]
+    grind [mem_affineSpan]
+  have ho_mem : o ∈ affineSpan ℝ (Set.range s.points) := by
+    have ho_line := AffineMap.lineMap_mem_affineSpan_pair t p q
+    have : affineSpan ℝ {p, q} ≤ affineSpan ℝ (Set.range s.points) := by
+      grind [affineSpan_pair_le_of_mem_of_mem]
+    grind [AffineSubspace.le_def']
+  rcases eq_affineCombination_of_mem_affineSpan_of_fintype ho_mem with ⟨w_o, hw_o, h_comb_o⟩
+  rcases eq_affineCombination_of_mem_affineSpan_of_fintype hq_mem with ⟨w_q, hw_q, h_comb_q⟩
+  have hmem: i ∈ Finset.univ := by simp
+  have h_comb_p := (Finset.affineCombination_affineCombinationSingleWeights ℝ _ s.points hmem).symm
+  rw [← p_def] at h_comb_p
+  set w_p := Finset.affineCombinationSingleWeights ℝ i with wp_def
+  let hw_p := Finset.sum_affineCombinationSingleWeights ℝ _ hmem
+  simp_rw [← wp_def] at hw_p
+  rw [h_comb_o, affineCombination_mem_interior_iff hw_o]
+  rw [h_comb_p, h_comb_o, h_comb_q] at o_def
+  rw [s.independent.affineCombination_eq_lineMap_iff_weight_lineMap hw_o hw_p hw_q] at o_def
+  simp only [Finset.mem_univ] at o_def
+  simp_rw [o_def]
+  intro j
+  rw [AffineMap.lineMap_apply_ring]
+  rw [faceOpposite, h_comb_q] at hq
+  rw [s.affineCombination_mem_interior_face_iff_mem_Ioo (by grind) hw_q] at hq
+  obtain ⟨hq1, hq2⟩ := hq
+  have hp1 : w_p i = 1 := by simp [wp_def]
+  have hp2 : ∀ j ≠ i, w_p j = 0 := by
+    rw [wp_def]
+    grind [Finset.affineCombinationSingleWeights_apply_of_ne]
+  have ht1 : 1 - t ∈ Set.Ioo 0 1 := by grind
+  by_cases hj : j = i
+  · have := hq2 i
+    simp at this
+    simp_rw [hj, this, hp1]
+    simp [ht1]
+  · have := hp2 j hj
+    rw [this]
+    simp_rw [mul_zero, zero_add]
+    have hjIoo : w_q j ∈ Set.Ioo 0 1 := by aesop
+    refine ⟨mul_pos ht.1 hjIoo.1,?_⟩
+    grind [mul_lt_one_of_nonneg_of_lt_one_left]
+
 
 variable [AddCommMonoid Pt] [SMul ℝ Pt]
 

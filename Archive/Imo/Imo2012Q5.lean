@@ -244,7 +244,6 @@ theorem pow_X_A : -cfg.sphere_A.power cfg.X = dist cfg.X cfg.L * dist cfg.X cfg.
 theorem hx : dist cfg.X cfg.K * dist cfg.X cfg.K' = dist cfg.X cfg.L * dist cfg.X cfg.L' := by
   rw [← pow_X_A, ← pow_X_B, pow_X_eq]
 
-
 open scoped Finset
 
 theorem X_mem_interior : cfg.X ∈ cfg.triangle_ABC.interior := by
@@ -261,41 +260,25 @@ theorem X_mem_interior : cfg.X ∈ cfg.triangle_ABC.interior := by
   rw [←h_B, ←h_A] at sbtw_ADB'
   have sbtw_CXD' := cfg.Sbtw_CXD
   rw [← h_C] at sbtw_CXD'
-
   set fs : Finset (Fin 3) := {(0 : Fin 3), (1 : Fin 3)}
-
   have hfs : #fs = 2 := by grind
   have hi : (2 : Fin 3) ∉ fs := by grind
-  have hd : cfg.D ∈ (cfg.triangle_ABC.face hfs).interior := by
+  have hd : cfg.D ∈ (cfg.triangle_ABC.faceOpposite (2 : Fin 3)).interior := by
     rw [interior_eq_image_Ioo]
-    have h1: (cfg.triangle_ABC.face hfs).points 0 = cfg.A := by
-      simp_rw [face_points']
-      simp
-
-      suffices hx : (fs.orderEmbOfFin hfs) 0 = 0 by
-        rw [hx]
-        rw [cfg.triangle_ABC_def]
-        simp
-      simp_rw [fs]
-
-      rw [Finset.orderEmbOfFin_apply]
-      have h : ({0, 1}: Finset (Fin 3)).sort (· ≤ ·) = [0, 1] := by
-        native_decide
-      simp_rw [h]
-      rfl
-
-    have h2: (cfg.triangle_ABC.face hfs).points 1 = cfg.B := by
-      sorry
+    simp only [Set.mem_image]
+    have h1: (faceOpposite cfg.triangle_ABC 2).points 0 = cfg.A := by
+      rw [faceOpposite,face_points']
+      simp [cfg.h_A]
+    have h2: (faceOpposite cfg.triangle_ABC 2).points 1 = cfg.B := by
+      rw [faceOpposite,face_points']
+      simp [Fin.succAbove, cfg.h_B]
     rw [h1, h2]
-
-    have h_ne : cfg.A ≠ cfg.B := by
-      suffices hcol: ¬ Collinear ℝ {cfg.A, cfg.B, cfg.C} by
-        exact ne₁₂_of_not_collinear hcol
-      exact cfg.not_col_ABC
     rw [sbtw_iff_mem_image_Ioo_and_ne] at sbtw_ADB
     exact sbtw_ADB.1
-
-  exact Lemma.Simplex.mem_interior_of_sbtw_point_face_interior cfg.triangle_ABC hfs hi sbtw_CXD' hd
+  rw [sbtw_iff_mem_image_Ioo_and_ne] at sbtw_CXD'
+  obtain ⟨t, htIoo, hx_comb⟩ := sbtw_CXD'.1
+  rw [← hx_comb]
+  exact Lemma.Simplex.mem_interior_of_lineMap_point_faceOpposite_interior cfg.triangle_ABC hd htIoo
 
 theorem indep_ABX : AffineIndependent ℝ ![cfg.A, cfg.B, cfg.X] := by
   suffices h: cfg.X ∉ affineSpan ℝ {cfg.A, cfg.B} by
