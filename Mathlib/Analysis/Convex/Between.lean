@@ -726,51 +726,6 @@ lemma mem_interior_face_iff_sbtw [Nontrivial R] [NoZeroSMulDivisors R V] {n : �
 
 open scoped Finset
 
-
-lemma mem_interior_of_lineMap_closedInterior_interior_Ioo [IsStrictOrderedRing R] {n : ℕ}
-    (s : Simplex R P n) {p q : P}
-    (hp : p ∈ s.closedInterior)
-    (hq : q ∈ s.interior) {t : R} (ht : t ∈ Set.Ioo 0 1) :
-    AffineMap.lineMap p q t ∈ s.interior := by
-  set o := AffineMap.lineMap p q t with ho
-  have ho_mem : o ∈ affineSpan R (Set.range s.points) := by
-    have ho_line := AffineMap.lineMap_mem_affineSpan_pair t p q
-    have : affineSpan R {p, q} ≤ affineSpan R (Set.range s.points) := by
-      refine affineSpan_pair_le_of_mem_of_mem ?_ ?_
-      · exact Set.mem_of_mem_of_subset hp s.closedInterior_subset_affineSpan
-      · have := Set.mem_of_mem_of_subset hq s.interior_subset_closedInterior
-        exact s.closedInterior_subset_affineSpan this
-    grind [AffineSubspace.le_def']
-  have ho_comb := eq_affineCombination_of_mem_affineSpan_of_fintype ho_mem
-  obtain ⟨w_o, hw_o, ho_eq⟩ := ho_comb
-  obtain ⟨w_p, hw_p, hwI_p, hp_eq⟩ := hp
-  obtain ⟨w_q, hw_q, hwI_q, hq_eq⟩ := hq
-  rw [ho_eq]
-  rw [affineCombination_mem_interior_iff hw_o]
-  rw [ho_eq, ← hp_eq, ← hq_eq] at ho
-  rw [s.independent.affineCombination_eq_lineMap_iff_weight_lineMap hw_o hw_p hw_q] at ho
-  simp only [Finset.mem_univ] at ho
-  simp_rw [ho]
-  intro i
-  obtain ⟨hwq₁, hwq₂⟩ := hwI_q i
-  obtain ⟨hwp₁, hwp₂⟩ := hwI_p i
-
-  obtain ⟨ht₁, ht₂⟩ := ht
-  have ht1 : 0 < (1 -t) :=by grind
-  have h0 : 0 < AffineMap.lineMap (w_p i) (w_q i) t := by
-    rw [AffineMap.lineMap_apply_ring]
-    positivity
-  have h1 : AffineMap.lineMap (w_p i) (w_q i) t < 1 := by
-    rw [AffineMap.lineMap_apply_ring]
-    have hle : (1 - t) * w_p i ≤ (1 - t) * 1 := by
-      apply mul_le_mul_of_nonneg_left hwp₂ ht1.le
-    have hlt : t * w_q i < t * 1 := by
-      apply mul_lt_mul_of_pos_left hwq₂ ht₁
-    have := add_lt_add_of_le_of_lt hle hlt
-    grind
-  exact Set.mem_Ioo.2 ⟨h0, h1⟩
-
-
 end Simplex
 
 end Affine

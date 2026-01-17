@@ -278,7 +278,7 @@ theorem X_mem_interior : cfg.X ∈ cfg.triangle_ABC.interior := by
   rw [sbtw_iff_mem_image_Ioo_and_ne] at sbtw_CXD'
   obtain ⟨t, htIoo, hx_comb⟩ := sbtw_CXD'.1
   rw [← hx_comb]
-  exact Lemma.Simplex.mem_interior_of_lineMap_point_faceOpposite_interior cfg.triangle_ABC hd htIoo
+  exact mem_interior_of_lineMap_point_faceOpposite_interior cfg.triangle_ABC hd htIoo
 
 theorem indep_ABX : AffineIndependent ℝ ![cfg.A, cfg.B, cfg.X] := by
   suffices h: cfg.X ∉ affineSpan ℝ {cfg.A, cfg.B} by
@@ -334,7 +334,7 @@ theorem h_L_interior : cfg.L ∈ cfg.triangle_ABC.interior := by
   rw [← hp_eq]
   set t := cfg.triangle_ABC
   have h_mem: t.points 1 ∈ t.closedInterior := t.point_mem_closedInterior 1
-  exact t.mem_interior_of_lineMap_closedInterior_interior_Ioo h_mem
+  exact t.mem_interior_of_lineMap_closedInterior_interior h_mem
     cfg.X_mem_interior hrIoo
 
 theorem h_K_interior : cfg.K ∈ cfg.triangle_ABC.interior := by
@@ -346,7 +346,7 @@ theorem h_K_interior : cfg.K ∈ cfg.triangle_ABC.interior := by
   rw [← hp_eq]
   set t := cfg.triangle_ABC
   have h_mem: t.points 0 ∈ t.closedInterior := t.point_mem_closedInterior 0
-  exact t.mem_interior_of_lineMap_closedInterior_interior_Ioo h_mem
+  exact t.mem_interior_of_lineMap_closedInterior_interior h_mem
     cfg.X_mem_interior hrIoo
 
 theorem sbtw_L'LB : Sbtw ℝ cfg.L' cfg.L cfg.B := by
