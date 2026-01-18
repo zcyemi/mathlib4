@@ -41,4 +41,5 @@ open scoped Real
     ∠ p' (orthogonalProjection s p) p = π / 2 := by
   rw [angle_comm, angle_self_orthogonalProjection p h]
 
+
 end EuclideanGeometry

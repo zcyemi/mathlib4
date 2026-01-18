@@ -30,7 +30,6 @@ namespace Imo2012Q5
 noncomputable section
 
 -- Lemmas from test.lean
-
 open RealInnerProductSpace
 
 structure Imo2012Q5Cfg where
@@ -248,11 +247,21 @@ open scoped Finset
 
 theorem X_mem_interior : cfg.X ∈ cfg.triangle_ABC.interior := by
   have sbtw_ADB : Sbtw ℝ cfg.A cfg.D cfg.B := by
-    rw [cfg.D_eq_altitudeFoot]
-    rw [← h_A, ←h_B]
-    apply Lemma.sbtw_altitudeFoot_of_rightAngled (by simp) (by simp) (by simp)
-    rw [h_A, h_B, h_C, angle_comm]
-    exact cfg.angle_BCA
+    have hangle_ACB: π / 2 ≤ ∠ cfg.A cfg.C cfg.B  := by
+      rw [angle_comm]
+      exact ge_of_eq cfg.angle_BCA
+    have notcol_ACB : ¬ Collinear ℝ {cfg.A, cfg.C, cfg.B} := by
+      rw [Set.pair_comm]
+      exact cfg.not_col_ABC
+    have hD := cfg.D_eq_altitudeFoot
+    rw [altitudeFoot, orthogonalProjectionSpan] at hD
+    have hset : Set.range (faceOpposite cfg.triangle_ABC 2).points = {cfg.A, cfg.B} := by
+      simp_rw [range_faceOpposite_points]
+      have h : ({2} : Set (Fin 3))ᶜ = {0, 1} := by ext x; fin_cases x <;> simp
+      simp_rw [h, cfg.triangle_ABC_def]
+      aesop
+    simp_rw [hset, cfg.h_C] at hD
+    exact sbtw_orthogonalProjection_of_angle_ge_pi_div_two notcol_ACB hangle_ACB hD
   have hne1 : (2: Fin 3) ≠ 0 := by simp
   have hne2 : (0: Fin 3) ≠ 1 := by simp
   have hne3 : (1: Fin 3) ≠ 2 := by simp

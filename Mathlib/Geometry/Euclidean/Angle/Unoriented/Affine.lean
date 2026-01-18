@@ -509,4 +509,6 @@ theorem collinear_of_sin_eq_zero {p₁ p₂ p₃ : P} (h : Real.sin (∠ p₁ p�
   contrapose
   exact sin_ne_zero_of_not_collinear
 
+
+
 end EuclideanGeometry
