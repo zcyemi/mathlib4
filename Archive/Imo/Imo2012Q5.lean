@@ -31,7 +31,7 @@ Show that `MK = ML`.
 We follow the solution from https://web.evanchen.cc/exams/IMO-2012-notes.pdf.
 Let `sphere_A` and `sphere_B` be the circles through `C` centered at `A` and `B`;
 extend rays `AK` and `BL` to hit `sphere_B` and `sphere_A` again at `K'`, `L'`.
-By radical center `X`, we have `KLK'L'` is cyclic, say
+By the radical center `X`, we have that `KLK'L'` is cyclic, say
 with circumcircle `ω`.
 By power of a point, we have `BK` and `AL` tangent to `ω`, so `MK = ML`.
 -/
@@ -70,8 +70,8 @@ namespace Imo2012Q5Cfg
 
 variable {cfg : Imo2012Q5Cfg V Pt}
 
-/-- The configuration has symmetry structure swapping A and B, K and L. We can prove for one point
-then get the result of the corrsponding point. -/
+/-- The configuration has a symmetry structure swapping `A` and `B`, and `K` and `L`. We can prove
+for one point then get the result for the corresponding point. -/
 def symm : Imo2012Q5Cfg V Pt where
   A := cfg.B
   B := cfg.A
@@ -152,7 +152,7 @@ def v_XL := cfg.X -ᵥ cfg.L
 lemma v_XK_def : cfg.X -ᵥ cfg.K = cfg.v_XK := by rfl
 lemma v_XL_def : cfg.X -ᵥ cfg.L = cfg.v_XL := by rfl
 
-/-- Point `K` lies on `sphere_B` by radius eq with `BK = BC` -/
+/-- Point `K` lies on `sphere_B` because `BK = BC`. -/
 theorem K_mem_sphere_B : cfg.K ∈ cfg.sphere_B := by
   apply mem_sphere.mpr
   rw [← dist_CB_eq_radius_B, dist_comm cfg.C]
@@ -162,9 +162,9 @@ theorem K_mem_sphere_B : cfg.K ∈ cfg.sphere_B := by
 
 theorem L_mem_sphere_A : cfg.L ∈ cfg.sphere_A := cfg.symm.K_mem_sphere_B
 
-/-- We define the `K'` as the second intersection of the ray `KX` with `sphere_B` -/
+/-- We define `K'` as the second intersection of the ray `KX` with `sphere_B`. -/
 def K' := cfg.sphere_B.secondInter cfg.K cfg.v_XK
-/-- We define the `L'` as the second intersection of the ray `LX` with `sphere_A` -/
+/-- We define `L'` as the second intersection of the ray `LX` with `sphere_A`. -/
 def L' := cfg.sphere_A.secondInter cfg.L cfg.v_XL
 
 lemma K'_def : cfg.sphere_B.secondInter cfg.K cfg.v_XK = cfg.K' := by rfl
@@ -212,10 +212,10 @@ theorem hKXK' : Sbtw ℝ cfg.K cfg.X cfg.K' := by
 
 theorem hLXL' : Sbtw ℝ cfg.L cfg.X cfg.L' := cfg.symm.hKXK'
 
-/-- The power of point `X` with respect to the `sphere_A` adn `sphere_B` is equal.
-Proved by using `Pythagorean theorem`, power X to `sphere_A` is equal to
-`‖AX‖² - ‖AC‖² = ‖AD‖² + ‖XD‖² - (‖AD‖² + ‖CD‖²) = ‖XD‖² - ‖CD‖²`. Which is equal to the symmetry
-case for power `X` of `sphere_B`. -/
+/-- The powers of point `X` with respect to `sphere_A` and `sphere_B` are equal.
+Proved by using the Pythagorean theorem: the power of `X` with respect to `sphere_A` is equal to
+`‖AX‖² - ‖AC‖² = ‖AD‖² + ‖XD‖² - (‖AD‖² + ‖CD‖²) = ‖XD‖² - ‖CD‖²`. This is equal to the symmetrical
+case for the power of `X` with respect to `sphere_B`. -/
 theorem pow_X_eq : cfg.sphere_A.power cfg.X = cfg.sphere_B.power cfg.X := by
   unfold Sphere.power
   have h1:= EuclideanGeometry.dist_sq_eq_dist_sq_add_dist_sq_iff_angle_eq_pi_div_two cfg.A cfg.D
@@ -254,8 +254,8 @@ theorem h_L'_A : cfg.L' ∈ cfg.sphere_A := by
 
 theorem h_K'_B : cfg.K' ∈ cfg.sphere_B := cfg.symm.h_L'_A
 
-/-- The power `X` to `sphere_B` also equals `-‖XK‖ * ‖XK'‖` by the power definition when point is on
-the interior of `sphere_B`. -/
+/-- The power of `X` with respect to `sphere_B` also equals `-‖XK‖ * ‖XK'‖` by the power definition
+when the point is in the interior of `sphere_B`. -/
 theorem pow_X_B : -cfg.sphere_B.power cfg.X = dist cfg.X cfg.K * dist cfg.X cfg.K' := by
   rw [Sphere.mul_dist_eq_neg_power_of_dist_center_le_radius cfg.h_sphere_B_radius
     cfg.hKXK'.wbtw.mem_affineSpan cfg.h_K_B cfg.h_K'_B]
@@ -272,14 +272,15 @@ theorem pow_X_B : -cfg.sphere_B.power cfg.X = dist cfg.X cfg.K * dist cfg.X cfg.
 theorem pow_X_A : -cfg.sphere_A.power cfg.X = dist cfg.X cfg.L * dist cfg.X cfg.L' :=
   cfg.symm.pow_X_B
 
-/-- By power of point `X` to both spheres are equal, we have the `‖XK‖ * ‖XK'‖ = ‖XL‖ * ‖XL'‖`.
-We use for further prove concyclic of `KK'LL'`. -/
+/-- Since the powers of point `X` with respect to both spheres are equal, we have
+`dist X K * dist X K' = dist X L * dist X L'`. This is used to further prove that `KK'LL'` are
+concyclic. -/
 theorem hx : dist cfg.X cfg.K * dist cfg.X cfg.K' = dist cfg.X cfg.L * dist cfg.X cfg.L' := by
   rw [← pow_X_A, ← pow_X_B, pow_X_eq]
 
 open scoped Finset
 
-/-- Prove some trivial result like X is in the interior of triangle `ABC`. -/
+/-- Prove a basic property: `X` is in the interior of triangle `ABC`. -/
 theorem X_mem_interior : cfg.X ∈ cfg.triangle_ABC.interior := by
   have sbtw_ADB : Sbtw ℝ cfg.A cfg.D cfg.B := by
     have hangle_ACB: π / 2 ≤ ∠ cfg.A cfg.C cfg.B  := by
@@ -403,16 +404,15 @@ theorem power_A_B : (dist cfg.A cfg.C) ^ 2 = dist cfg.A cfg.K * dist cfg.A cfg.K
 
 variable [hd2 : Fact (finrank ℝ V = 2)]
 
-/-- Prove the concyclic of points `K, K', L, L'` -/
-theorem cosphereic_set_ω :
-    Cospherical {cfg.K, cfg.K', cfg.L, cfg.L'} := by
+/-- Prove that the points `K, K', L, L'` are concyclic. -/
+theorem cosphereic_set_ω : Cospherical {cfg.K, cfg.K', cfg.L, cfg.L'} := by
   haveI := someOrientation V
   have h1 := angle_eq_pi_iff_sbtw.mpr cfg.hKXK'
   have h2 := angle_eq_pi_iff_sbtw.mpr cfg.hLXL'
   apply cospherical_of_mul_dist_eq_mul_dist_of_angle_eq_pi ?_ h1 h2 cfg.notcol_KXL
   grind [cfg.hx, dist_comm]
 
-/-- Construct the `sphere_ω` with the `cospherical` result. -/
+/-- Construct the sphere `ω` using the `cospherical` result. -/
 def sphere_ω : EuclideanGeometry.Sphere Pt :=
   (cospherical_iff_exists_sphere.mp (cosphereic_set_ω (cfg := cfg))).choose
 
@@ -462,8 +462,8 @@ theorem h_tangent_at_L_ω : cfg.sphere_ω.IsTangentAt cfg.L (line[ℝ, cfg.A, cf
   rw [h_power_ω_A, cfg.AL_eq_AC]
   exact cfg.power_A_B
 
-/-- `AB` and `AL` are tangent to `sphere_ω` at points `K` and `L` respectively.
-`M` is the intersection point of lines `AL` and `BK`. Then `‖MK‖ = ‖ML‖`. -/
+/-- `BK` and `AL` are tangent to `sphere_ω` at points `K` and `L` respectively.
+`M` is the intersection point of lines `AL` and `BK`. Thus, `dist M K = dist M L`. -/
 theorem result : dist cfg.M cfg.K = dist cfg.M cfg.L := by
   exact EuclideanGeometry.Sphere.IsTangentAt.dist_eq_of_mem_of_mem
     cfg.h_tangent_at_K_ω (cfg.h_tangent_at_L_ω) cfg.M_mem_inf_AL_BK.2 cfg.M_mem_inf_AL_BK.1
