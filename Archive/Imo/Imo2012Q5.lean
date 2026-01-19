@@ -14,8 +14,6 @@ import Mathlib.Geometry.Euclidean.Sphere.Tangent
 import Mathlib.Geometry.Euclidean.Altitude
 import Mathlib.Geometry.Euclidean.Angle.Unoriented.Basic
 import Mathlib.Geometry.Euclidean.Triangle
-import Archive.Imo.Imo2012Q5Lemma
-
 
 /-!
 # IMO 2012 Q5
@@ -31,14 +29,11 @@ Show that `MK = ML`.
 ## Solution
 
 We follow the solution from https://web.evanchen.cc/exams/IMO-2012-notes.pdf.
-
 Let `sphere_A` and `sphere_B` be the circles through `C` centered at `A` and `B`;
 extend rays `AK` and `BL` to hit `sphere_B` and `sphere_A` again at `K'`, `L'`.
 By radical center `X`, we have `KLK'L'` is cyclic, say
 with circumcircle `ω`.
-
 By power of a point, we have `BK` and `AL` tangent to `ω`, so `MK = ML`.
-
 -/
 
 
@@ -360,14 +355,14 @@ theorem indep_ABX : AffineIndependent ℝ ![cfg.A, cfg.B, cfg.X] := by
 
 theorem notcol_KXL : ¬ Collinear ℝ {cfg.K, cfg.X, cfg.L} := by
   rw [← affineIndependent_iff_not_collinear_set]
-  have indep_XAB: AffineIndependent ℝ ![cfg.X, cfg.A, cfg.B] := by simp [indep_ABX]
+  have indep_XAB: AffineIndependent ℝ ![cfg.X, cfg.A, cfg.B] := cfg.indep_ABX.comm_right.comm_left
   have h1 : AffineIndependent ℝ ![cfg.X, cfg.K, cfg.B] := by
     rw [← affineIndependent_iff_affineIndependent_of_sbtw cfg.Sbtw_AKX.symm]
     exact indep_XAB
-  have indep_XBK : AffineIndependent ℝ ![cfg.X, cfg.B, cfg.K] := by simp [h1]
+  have indep_XBK : AffineIndependent ℝ ![cfg.X, cfg.B, cfg.K] := h1.comm_right
   have h2 : AffineIndependent ℝ ![cfg.X, cfg.L, cfg.K] :=
     (affineIndependent_iff_affineIndependent_of_sbtw cfg.Sbtw_BLX.symm).mp indep_XBK
-  simp [h2]
+  exact h2.reverse_of_three.comm_right
 
 theorem L_ne_L' : cfg.L ≠ cfg.L' := cfg.hLXL'.left_ne_right
 
