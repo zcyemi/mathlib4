@@ -402,11 +402,8 @@ theorem power_B_A : (dist cfg.B cfg.C) ^ 2 = dist cfg.B cfg.L * dist cfg.B cfg.L
 theorem power_A_B : (dist cfg.A cfg.C) ^ 2 = dist cfg.A cfg.K * dist cfg.A cfg.K' :=
   cfg.symm.power_B_A
 
-variable [hd2 : Fact (finrank ℝ V = 2)]
-
 /-- Prove that the points `K, K', L, L'` are concyclic. -/
 theorem cosphereic_set_ω : Cospherical {cfg.K, cfg.K', cfg.L, cfg.L'} := by
-  haveI := someOrientation V
   have h1 := angle_eq_pi_iff_sbtw.mpr cfg.hKXK'
   have h2 := angle_eq_pi_iff_sbtw.mpr cfg.hLXL'
   apply cospherical_of_mul_dist_eq_mul_dist_of_angle_eq_pi ?_ h1 h2 cfg.notcol_KXL
