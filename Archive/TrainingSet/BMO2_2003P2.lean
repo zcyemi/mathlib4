@@ -180,8 +180,6 @@ theorem angle_DAP_eq_angle_PAB : ∠ cfg.D cfg.A cfg.P = ∠ cfg.P cfg.A cfg.B :
   have h := cfg.sbtw_A_D_B.angle_eq_left cfg.P
   simpa [angle_comm] using h
 
-
-
 theorem angle_ADP_eq_angle_APB :
     ∠ cfg.A cfg.D cfg.P = ∠ cfg.A cfg.P cfg.B := by
   calc
@@ -225,7 +223,6 @@ theorem AP_sq_eq_AD_mul_AB :
   obtain ⟨r, hr_pos, hAD_eq, hAP_eq, hDP_eq⟩ := cfg.exists_pos_dist_eq
   grind
 
-
 theorem AP_eq_two_mul_AD :
     dist cfg.A cfg.P = 2 * dist cfg.A cfg.D := by
   have h1 := cfg.AP_sq_eq_AD_mul_AB
@@ -239,8 +236,6 @@ theorem AP_eq_two_mul_AD :
       nlinarith [show 0 ≤ dist cfg.A cfg.D from dist_nonneg]
     linarith
 
-
-
 theorem PB_eq_two_mul_PD : dist cfg.P cfg.B = 2 * dist cfg.P cfg.D := by
   obtain ⟨r, hr_pos, hAD_eq, hAP_eq, hDP_eq⟩ := cfg.exists_pos_dist_eq
   have hAD_pos : 0 < dist cfg.A cfg.D := dist_pos.mpr cfg.A_ne_D
@@ -251,13 +246,8 @@ theorem PB_eq_two_mul_PD : dist cfg.P cfg.B = 2 * dist cfg.P cfg.D := by
     simpa [dist_comm, hr] using hDP_eq
   nlinarith
 
-
-
-
-
 theorem result : dist cfg.P cfg.B = 2 * dist cfg.P cfg.D :=
   cfg.PB_eq_two_mul_PD
-
 
 end Cfg
 
