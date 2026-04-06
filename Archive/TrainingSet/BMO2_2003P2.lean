@@ -21,7 +21,7 @@ open AffineSubspace
 attribute [local instance] FiniteDimensional.of_fact_finrank_eq_two
 
 variable (V Pt : Type*) [NormedAddCommGroup V] [InnerProductSpace ℝ V] [MetricSpace Pt]
-variable [NormedAddTorsor V Pt] [Module.Oriented ℝ V (Fin 2)]
+variable [NormedAddTorsor V Pt] [Fact (finrank ℝ V = 2)] [Module.Oriented ℝ V (Fin 2)]
 
 namespace BMO2_2003P2
 
@@ -112,7 +112,13 @@ theorem affineIndependent_ADP : AffineIndependent ℝ ![cfg.A, cfg.D, cfg.P] := 
 theorem cospherical_ABCP : Cospherical ({cfg.A, cfg.B, cfg.C, cfg.P} : Set Pt) := by
   rw [cospherical_iff_exists_sphere]
   refine ⟨cfg.triangle_ABC.circumsphere, ?_⟩
-  sorry
+  intro x hx
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx
+  rcases hx with rfl | rfl | rfl | rfl
+  · simpa [cfg.triangle_ABC_def] using cfg.triangle_ABC.mem_circumsphere (i := 0)
+  · simpa [cfg.triangle_ABC_def] using cfg.triangle_ABC.mem_circumsphere (i := 1)
+  · simpa [cfg.triangle_ABC_def] using cfg.triangle_ABC.mem_circumsphere (i := 2)
+  · simpa using cfg.P_mem_circumsphere
 
 
 theorem P_ne_A : cfg.P ≠ cfg.A :=
@@ -133,33 +139,38 @@ section oriented
 
 variable [Module.Oriented ℝ V (Fin 2)]
 
-theorem two_zsmul_oangle_APB_eq_two_zsmul_oangle_ACB [Fact (finrank ℝ V = 2)]:
+theorem two_zsmul_oangle_APB_eq_two_zsmul_oangle_ACB :
     (2 : ℤ) • ∡ cfg.A cfg.P cfg.B = (2 : ℤ) • ∡ cfg.A cfg.C cfg.B := by
   have hAPCB : Cospherical ({cfg.A, cfg.P, cfg.C, cfg.B} : Set Pt) := by
     grind [Set.insert_comm, Set.pair_comm, cfg.cospherical_ABCP]
   exact hAPCB.two_zsmul_oangle_eq cfg.P_ne_A cfg.P_ne_B cfg.C_ne_A cfg.C_ne_B
 
-theorem oangle_APB_sign_eq_oangle_ACB_sign [Fact (finrank ℝ V = 2)]:
+theorem oangle_APB_sign_eq_oangle_ACB_sign :
     (∡ cfg.A cfg.P cfg.B).sign = (∡ cfg.A cfg.C cfg.B).sign := by
   have hA_mem : cfg.A ∈ line[ℝ, cfg.A, cfg.B] := left_mem_affineSpan_pair ℝ cfg.A cfg.B
   have hB_mem : cfg.B ∈ line[ℝ, cfg.A, cfg.B] := right_mem_affineSpan_pair ℝ cfg.A cfg.B
-  exact (line[ℝ, cfg.A, cfg.B].SSameSide.oangle_sign_eq hA_mem hB_mem cfg.P_sSameSide_AB_C)
+  exact (cfg.P_sSameSide_AB_C.oangle_sign_eq hA_mem hB_mem).symm
 
-theorem oangle_ACB_sign_ne_zero [Fact (finrank ℝ V = 2)]: (∡ cfg.A cfg.C cfg.B).sign ≠ 0 := by
+theorem oangle_ACB_sign_ne_zero : (∡ cfg.A cfg.C cfg.B).sign ≠ 0 := by
   intro h
-  exact cfg.not_collinear_ABC ((oangle_sign_eq_zero_iff_collinear :
-    (∡ cfg.A cfg.C cfg.B).sign = 0 ↔ Collinear ℝ ({cfg.A, cfg.C, cfg.B} : Set Pt)).1 h)
+  have h' : Collinear ℝ ({cfg.A, cfg.B, cfg.C} : Set Pt) := by
+    simpa [Set.insert_comm, Set.pair_comm] using
+      ((oangle_sign_eq_zero_iff_collinear :
+        (∡ cfg.A cfg.C cfg.B).sign = 0 ↔ Collinear ℝ ({cfg.A, cfg.C, cfg.B} : Set Pt)).1 h)
+  exact cfg.not_collinear_ABC h'
 
-theorem oangle_APB_eq_oangle_ACB [Fact (finrank ℝ V = 2)]: ∡ cfg.A cfg.P cfg.B = ∡ cfg.A cfg.C cfg.B :=
-  (Real.Angle.two_zsmul_eq_iff_eq cfg.oangle_ACB_sign_ne_zero
-    cfg.oangle_APB_sign_eq_oangle_ACB_sign).1 cfg.two_zsmul_oangle_APB_eq_two_zsmul_oangle_ACB
+theorem oangle_APB_eq_oangle_ACB : ∡ cfg.A cfg.P cfg.B = ∡ cfg.A cfg.C cfg.B := by
+  have htwo : (2 : ℤ) • ∡ cfg.A cfg.C cfg.B = (2 : ℤ) • ∡ cfg.A cfg.P cfg.B := by
+    simpa [eq_comm] using cfg.two_zsmul_oangle_APB_eq_two_zsmul_oangle_ACB
+  exact (Real.Angle.two_zsmul_eq_iff_eq cfg.oangle_ACB_sign_ne_zero
+    cfg.oangle_APB_sign_eq_oangle_ACB_sign.symm).1 htwo |>.symm
 
 theorem angle_APB_eq_angle_ACB : ∠ cfg.A cfg.P cfg.B = ∠ cfg.A cfg.C cfg.B := by
   have h1 : ∠ cfg.A cfg.P cfg.B = |(∡ cfg.A cfg.P cfg.B).toReal| :=
-    angle_eq_abs_oangle_toReal cfg.P_ne_A cfg.P_ne_B
+    angle_eq_abs_oangle_toReal cfg.P_ne_A.symm cfg.P_ne_B.symm
   have h2 : ∠ cfg.A cfg.C cfg.B = |(∡ cfg.A cfg.C cfg.B).toReal| :=
-    angle_eq_abs_oangle_toReal cfg.C_ne_A cfg.C_ne_B
-  simpa [h1, h2, cfg.oangle_APB_eq_oangle_ACB]
+    angle_eq_abs_oangle_toReal cfg.C_ne_A.symm cfg.C_ne_B.symm
+  simp [h1, h2, cfg.oangle_APB_eq_oangle_ACB]
 
 end oriented
 
@@ -171,7 +182,7 @@ theorem angle_DAP_eq_angle_PAB : ∠ cfg.D cfg.A cfg.P = ∠ cfg.P cfg.A cfg.B :
 
 
 
-theorem angle_ADP_eq_angle_APB:
+theorem angle_ADP_eq_angle_APB :
     ∠ cfg.A cfg.D cfg.P = ∠ cfg.A cfg.P cfg.B := by
   calc
     ∠ cfg.A cfg.D cfg.P = ∠ cfg.A cfg.C cfg.B := cfg.angle_ADP_eq_angle_ACB
@@ -219,21 +230,26 @@ theorem AP_eq_two_mul_AD :
     dist cfg.A cfg.P = 2 * dist cfg.A cfg.D := by
   have h1 := cfg.AP_sq_eq_AD_mul_AB
   rw [← cfg.four_mul_dist_AD_eq_dist_AB] at h1
-  have h2 : dist cfg.A cfg.D * (4 * dist cfg.A cfg.D) = (2 * dist cfg.A cfg.D) ^ 2 := by grind
-  rw [h2] at h1
-  have dist_AD_pos : 0 < dist cfg.A cfg.D := by grind [dist_pos, cfg.A_ne_D]
-
-  sorry
+  have hsq : dist cfg.A cfg.P ^ 2 = (2 * dist cfg.A cfg.D) ^ 2 := by
+    nlinarith
+  rcases sq_eq_sq_iff_eq_or_eq_neg.mp hsq with h | h
+  · exact h
+  · have hAP_nonneg : 0 ≤ dist cfg.A cfg.P := dist_nonneg
+    have hAD_nonneg : 0 ≤ 2 * dist cfg.A cfg.D := by
+      nlinarith [show 0 ≤ dist cfg.A cfg.D from dist_nonneg]
+    linarith
 
 
 
 theorem PB_eq_two_mul_PD : dist cfg.P cfg.B = 2 * dist cfg.P cfg.D := by
-  have h1:= cfg.AP_sq_eq_AD_mul_AB
-  rw [cfg.AP_eq_two_mul_AD] at h1
-  ring_nf at h1
-  rw [pow_two] at h1
-  rw [mul_assoc] at h1
-  sorry
+  obtain ⟨r, hr_pos, hAD_eq, hAP_eq, hDP_eq⟩ := cfg.exists_pos_dist_eq
+  have hAD_pos : 0 < dist cfg.A cfg.D := dist_pos.mpr cfg.A_ne_D
+  rw [cfg.AP_eq_two_mul_AD] at hAD_eq
+  have hr : r = (1 / 2 : ℝ) := by
+    nlinarith
+  have hDP' : dist cfg.P cfg.D = (1 / 2 : ℝ) * dist cfg.P cfg.B := by
+    simpa [dist_comm, hr] using hDP_eq
+  nlinarith
 
 
 
