@@ -531,10 +531,11 @@ theorem angle_lt_angle_of_angle_ge_pi_div_two {p₁ p₂ p₃ : P}
 
 /-- If the angle at `p₂` is at least `π / 2` in a non-degenerate triangle `p₁p₂p₃`, then the
 orthogonal projection of `p₂` onto the line `p₁p₃` lies strictly between `p₁` and `p₃`. -/
-theorem sbtw_orthogonalProjection_of_angle_ge_pi_div_two {p₁ p₂ p₃ p : P}
-    (hnot_col : ¬ Collinear ℝ {p₁, p₂, p₃}) (h_angle : π / 2 ≤ ∠ p₁ p₂ p₃)
-    (hp : p = orthogonalProjection (affineSpan ℝ {p₁, p₃}) p₂) :
-    Sbtw ℝ p₁ p p₃ := by
+theorem sbtw_orthogonalProjection_of_angle_ge_pi_div_two {p₁ p₂ p₃ : P}
+    (hnot_col : ¬ Collinear ℝ {p₁, p₂, p₃}) (h_angle : π / 2 ≤ ∠ p₁ p₂ p₃) :
+    Sbtw ℝ p₁ (orthogonalProjection (affineSpan ℝ {p₁, p₃}) p₂) p₃ := by
+  let p : P := orthogonalProjection (affineSpan ℝ {p₁, p₃}) p₂
+  have hp : p = orthogonalProjection (affineSpan ℝ {p₁, p₃}) p₂ := rfl
   have hp_col : Collinear ℝ ({p₁, p, p₃} : Set P) := by
     rw [Set.insert_comm]
     exact collinear_insert_of_mem_affineSpan_pair (by simp [hp])
@@ -554,33 +555,36 @@ theorem sbtw_orthogonalProjection_of_angle_ge_pi_div_two {p₁ p₂ p₃ p : P}
   rw [EuclideanGeometry.angle, ← neg_vsub_eq_vsub_rev, angle_neg_left,
     InnerProductGeometry.angle_comm] at h_angle
   have h_norm31_pos : 0 < ‖p₃ -ᵥ p₁‖ ^ 2 := by
-    have :  0 < ‖p₃ -ᵥ p₁‖ := by grind [norm_pos_iff, ne₁₃_of_not_collinear hnot_col, vsub_ne_zero]
+    have : 0 < ‖p₃ -ᵥ p₁‖ := by
+      grind [norm_pos_iff, ne₁₃_of_not_collinear hnot_col, vsub_ne_zero]
     nlinarith
   have h_norm21_pos : 0 < ‖p₂ -ᵥ p₁‖ ^ 2 := by
-    have : 0 < ‖p₂ -ᵥ p₁‖ := by grind [norm_pos_iff, ne₁₂_of_not_collinear hnot_col, vsub_ne_zero]
+    have : 0 < ‖p₂ -ᵥ p₁‖ := by
+      grind [norm_pos_iff, ne₁₂_of_not_collinear hnot_col, vsub_ne_zero]
     nlinarith
   have h_norm32_pos : 0 < ‖p₃ -ᵥ p₂‖ ^ 2 := by
-    have : 0 < ‖p₃ -ᵥ p₂‖ := by grind [norm_pos_iff, ne₂₃_of_not_collinear hnot_col, vsub_ne_zero]
+    have : 0 < ‖p₃ -ᵥ p₂‖ := by
+      grind [norm_pos_iff, ne₂₃_of_not_collinear hnot_col, vsub_ne_zero]
     nlinarith
   have h_prep : ⟪p₂ -ᵥ p, p₃ -ᵥ p₁⟫ = 0 := by
-      rw [real_inner_comm]
-      have hmem : p₃ -ᵥ p₁ ∈ (affineSpan ℝ {p₁, p₃}).direction := by
-        grind [AffineSubspace.vsub_mem_direction, left_mem_affineSpan_pair,
-          right_mem_affineSpan_pair]
-      have horth : p₂ -ᵥ p ∈ (affineSpan ℝ {p₁, p₃}).directionᗮ := by
-        grind [vsub_orthogonalProjection_mem_direction_orthogonal (affineSpan ℝ {p₁, p₃}) p₂]
-      exact Submodule.inner_right_of_mem_orthogonal hmem horth
+    rw [real_inner_comm]
+    have hmem : p₃ -ᵥ p₁ ∈ (affineSpan ℝ {p₁, p₃}).direction := by
+      grind [AffineSubspace.vsub_mem_direction, left_mem_affineSpan_pair,
+        right_mem_affineSpan_pair]
+    have horth : p₂ -ᵥ p ∈ (affineSpan ℝ {p₁, p₃}).directionᗮ := by
+      grind [vsub_orthogonalProjection_mem_direction_orthogonal (affineSpan ℝ {p₁, p₃}) p₂]
+    exact Submodule.inner_right_of_mem_orthogonal hmem horth
   have hr_inner : r = ⟪p₂ -ᵥ p₁, p₃ -ᵥ p₁⟫ / ‖p₃ -ᵥ p₁‖ ^ 2 := by
     have : p₂ -ᵥ p₁ = (p₂ -ᵥ p) + (p -ᵥ p₁) := by
       grind [vsub_add_vsub_cancel]
-    rw [this, inner_add_left, h_prep, zero_add,← v_def, ← hr, inner_smul_left,
+    rw [this, inner_add_left, h_prep, zero_add, ← v_def, ← hr, inner_smul_left,
       real_inner_self_eq_norm_sq, mul_div_assoc, div_self (by grind)]
     simp
   have h_inner_eq_zero : ⟪p₂ -ᵥ p₁, p₃ -ᵥ p₂⟫ ≥ 0 := by
-    rw [← neg_vsub_eq_vsub_rev, inner_neg_left, ← cos_angle_mul_norm_mul_norm,
+    rw [← neg_vsub_eq_vsub_rev, inner_neg_left, ← InnerProductGeometry.cos_angle_mul_norm_mul_norm,
       ← EuclideanGeometry.angle, mul_comm, neg_mul_eq_mul_neg, ge_iff_le]
-    suffices h: 0 ≤ - Real.cos (∠ p₁ p₂ p₃)  by
-      have h1: 0 ≤ ‖p₁ -ᵥ p₂‖ * ‖p₃ -ᵥ p₂‖:= by grind [mul_nonneg]
+    suffices h : 0 ≤ -Real.cos (∠ p₁ p₂ p₃) by
+      have h1 : 0 ≤ ‖p₁ -ᵥ p₂‖ * ‖p₃ -ᵥ p₂‖ := by grind [mul_nonneg]
       nlinarith
     simp only [Left.nonneg_neg_iff]
     apply Real.cos_nonpos_of_pi_div_two_le_of_le h_angle'
