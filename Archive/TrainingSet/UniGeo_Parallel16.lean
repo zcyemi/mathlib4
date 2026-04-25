@@ -5,10 +5,8 @@ Authors: Wang Ying
 -/
 import Mathlib
 
-open scoped Real EuclideanGeometry
-open Affine EuclideanGeometry Module AffineSubspace
-
-namespace Parallel16
+open scoped Real EuclideanGeometry Similar Congruent InnerProductSpace
+open Affine EuclideanGeometry Module AffineSubspace InnerProductSpace
 
 variable {V Pt : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [MetricSpace Pt]
 variable [NormedAddTorsor V Pt] [Fact (finrank ℝ V = 2)] [Oriented ℝ V (Fin 2)]
@@ -19,18 +17,16 @@ TW between T and W. TV and TW intersect UX, TV and TW intersect VW, and angle
 TUX equals angle TWV, with UX parallel VW, prove that angle UVW equals angle TWV.
 -/
 theorem result
-    (T V W U X : Pt)
-    (U_ne_X : U ≠ X)
-    (V_ne_W : V ≠ W)
-    (Sbtw_TUV : Sbtw ℝ T U V)
-    (Sbtw_TXW : Sbtw ℝ T X W)
-    (TV_intersect_UX : (line[ℝ, T, V] : Set Pt) ∩ line[ℝ, U, X] ≠ ∅)
-    (TW_intersect_UX : (line[ℝ, T, W] : Set Pt) ∩ line[ℝ, U, X] ≠ ∅)
-    (TV_intersect_VW : (line[ℝ, T, V] : Set Pt) ∩ line[ℝ, V, W] ≠ ∅)
-    (TW_intersect_VW : (line[ℝ, T, W] : Set Pt) ∩ line[ℝ, V, W] ≠ ∅)
-    (angle_TUX_eq_angle_TWV : ∠ T U X = ∠ T W V)
-    (UX_parallel_VW : line[ℝ, U, X] ∥ line[ℝ, V, W]) :
-    ∠ U V W = ∠ T W V := by
+    (t v w u x : Pt)
+    (u_ne_x : u ≠ x)
+    (v_ne_w : v ≠ w)
+    (sbtw_tuv : Sbtw ℝ t u v)
+    (sbtw_txw : Sbtw ℝ t x w)
+    (tv_intersect_ux : (line[ℝ, t, v] : Set Pt) ∩ line[ℝ, u, x] ≠ ∅)
+    (tw_intersect_ux : (line[ℝ, t, w] : Set Pt) ∩ line[ℝ, u, x] ≠ ∅)
+    (tv_intersect_vw : (line[ℝ, t, v] : Set Pt) ∩ line[ℝ, v, w] ≠ ∅)
+    (tw_intersect_vw : (line[ℝ, t, w] : Set Pt) ∩ line[ℝ, v, w] ≠ ∅)
+    (angle_tux_eq_angle_twv : ∠ t u x = ∠ t w v)
+    (ux_parallel_vw : line[ℝ, u, x] ∥ line[ℝ, v, w]) :
+    ∠ u v w = ∠ t w v := by
   sorry
-
-end Parallel16
