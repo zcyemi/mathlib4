@@ -6,6 +6,8 @@ Authors: Zheng Chu
 import Mathlib.Geometry.Euclidean.Triangle
 import Mathlib.Geometry.Euclidean.MongePoint
 import Mathlib.Geometry.Euclidean.Simplex
+import Mathlib.Geometry.Euclidean.Angle.Sphere
+import Mathlib.Geometry.Euclidean.Angle.Unoriented.Projection
 
 open scoped Real
 open Affine EuclideanGeometry Module
@@ -94,16 +96,52 @@ theorem not_collinear_ABC : ¬Collinear ℝ ({cfg.A, cfg.B, cfg.C} : Set Pt) :=
 /-! ### Proof steps -/
 
 theorem DE_perp_AB :
-    line[ℝ, cfg.Di, cfg.Ei].direction ⟂ line[ℝ, cfg.A, cfg.B].direction := by
-  sorry
+    line[ℝ, cfg.Di, cfg.Ei].direction ⟂
+      (affineSpan ℝ (cfg.triangle_ABC.points '' {cfg.i, cfg.j})).direction := by
+  rw [Submodule.isOrtho_iff_le, direction_affineSpan, vectorSpan_pair_rev]
+  exact (Submodule.span_singleton_le_iff_mem _ _).2 <| by
+    simpa [cfg.Ei_def] using
+      (orthogonalProjection_vsub_mem_direction_orthogonal
+        (affineSpan ℝ (cfg.triangle_ABC.points '' {cfg.i, cfg.j})) cfg.Di)
 
 theorem DF_perp_AC :
-    line[ℝ, cfg.Di, cfg.Fi].direction ⟂ line[ℝ, cfg.A, cfg.C].direction := by
+    line[ℝ, cfg.Di, cfg.Fi].direction ⟂
+      (affineSpan ℝ (cfg.triangle_ABC.points '' {cfg.i, cfg.k})).direction := by
+  rw [Submodule.isOrtho_iff_le, direction_affineSpan, vectorSpan_pair_rev]
+  exact (Submodule.span_singleton_le_iff_mem _ _).2 <| by
+    simpa [cfg.Fi_def] using
+      (orthogonalProjection_vsub_mem_direction_orthogonal
+        (affineSpan ℝ (cfg.triangle_ABC.points '' {cfg.i, cfg.k})) cfg.Di)
 
-  sorry
-
-theorem AEiDiFi_cyclic : Cospherical ({cfg.A, cfg.Ei, cfg.Di, cfg.Fi} : Set Pt) := by
-  sorry
+theorem AEiDiFi_cyclic :
+    Cospherical ({cfg.triangle_ABC.points cfg.i, cfg.Ei, cfg.Di, cfg.Fi} : Set Pt) := by
+  rw [cospherical_iff_exists_sphere]
+  refine ⟨Sphere.ofDiameter cfg.Di (cfg.triangle_ABC.points cfg.i), ?_⟩
+  intro x hx
+  simp only [Set.mem_insert_iff, Set.mem_singleton_iff] at hx ⊢
+  rcases hx with rfl | rfl | rfl | rfl
+  · rw [Sphere.ofDiameter, dist_left_midpoint]
+    ring_nf
+  · have hmem : cfg.triangle_ABC.points cfg.i ∈
+        affineSpan ℝ (cfg.triangle_ABC.points '' {cfg.i, cfg.j}) := by
+      simpa using
+        left_mem_affineSpan_pair ℝ (cfg.triangle_ABC.points cfg.i)
+          (cfg.triangle_ABC.points cfg.j)
+    have hangle : ∠ cfg.Di cfg.Ei (cfg.triangle_ABC.points cfg.i) = π / 2 := by
+      simpa [cfg.Ei_def] using
+        (angle_self_orthogonalProjection cfg.Di (cfg.triangle_ABC.points cfg.i) hmem)
+    exact (angle_eq_pi_div_two_iff_mem_sphere_ofDiameter).mp hangle
+  · rw [Sphere.ofDiameter, dist_right_midpoint]
+    ring_nf
+  · have hmem : cfg.triangle_ABC.points cfg.i ∈
+        affineSpan ℝ (cfg.triangle_ABC.points '' {cfg.i, cfg.k}) := by
+      simpa using
+        left_mem_affineSpan_pair ℝ (cfg.triangle_ABC.points cfg.i)
+          (cfg.triangle_ABC.points cfg.k)
+    have hangle : ∠ cfg.Di cfg.Fi (cfg.triangle_ABC.points cfg.i) = π / 2 := by
+      simpa [cfg.Fi_def] using
+        (angle_self_orthogonalProjection cfg.Di (cfg.triangle_ABC.points cfg.i) hmem)
+    exact (angle_eq_pi_div_two_iff_mem_sphere_ofDiameter).mp hangle
 
 /-- `EF = AD * sin A` in the configuration. -/
 theorem EF_eq_AD_sinA :
@@ -131,7 +169,6 @@ theorem EiFi_length_formula :
   have h_EF_AD_sinA := cfg.EF_eq_AD_sinA
   have h_AD_AB_sinB := cfg.AD_eq_AB_sinB
   have h_AB_2R_sinC := cfg.AB_eq_2R_sinC
-
   calc
     dist cfg.Ei cfg.Fi = dist cfg.A cfg.Di * Real.sin (∠ cfg.B cfg.A cfg.C) := h_EF_AD_sinA
     _ =
@@ -184,7 +221,6 @@ theorem bmo2_2002_p1 [Fact (finrank ℝ V = 2)] (A B C Di Dj Ei Ej Fi Fj : Pt)
     (Ej_def : Ej = orthogonalProjection (affineSpan ℝ (triangle_ABC.points '' {j, i})) Dj)
     (Fj_def : Fj = orthogonalProjection (affineSpan ℝ (triangle_ABC.points '' {j, k})) Dj) :
     dist Ei Fi = dist Ej Fj := by
-
   let cfg : Cfg (V := V) (Pt := Pt) :=
    (⟨A, B, C, affineIndependent_ABC, triangle_ABC_def, acute_ABC, i, j, k, i_ne_j, i_ne_k, j_ne_k, Di, Dj, Ei, Fi, Ej, Fj, Di_def, Dj_def, Ei_def, Fi_def, Ej_def, Fj_def⟩)
   let ret := cfg.result

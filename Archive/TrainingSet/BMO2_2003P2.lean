@@ -25,8 +25,11 @@ variable [NormedAddTorsor V Pt] [Fact (finrank ℝ V = 2)] [Module.Oriented ℝ 
 
 namespace BMO2_2003P2
 
-
 noncomputable section
+
+@[implicit_reducible]
+def someOrientation [hd2 : Fact (finrank ℝ V = 2)] : Module.Oriented ℝ V (Fin 2) :=
+  ⟨Basis.orientation (finBasisOfFinrankEq _ _ hd2.out)⟩
 
 -- 1. P、A、B、C 四点共圆 → ∠APB = ∠ACB。 (同弧所对圆周角相等)
 -- 2. ∠ADP = ∠ACB → ∠ADP = ∠APB。 (等量代换)
@@ -58,14 +61,12 @@ structure Cfg where
   (angle_ADP_eq_angle_ACB : ∠ A D P = ∠ A C B)
   (P_mem_circumsphere : P ∈ triangle_ABC.circumsphere)
 
-
-@[implicit_reducible]
-def someOrientation [hd2 : Fact (finrank ℝ V = 2)] : Module.Oriented ℝ V (Fin 2) :=
-  ⟨Basis.orientation (finBasisOfFinrankEq _ _ hd2.out)⟩
-
 variable {V Pt}
 
 namespace Cfg
+section oriented
+
+variable [Module.Oriented ℝ V (Fin 2)]
 
 variable (cfg : Cfg (V := V) (Pt := Pt))
 
@@ -135,10 +136,6 @@ theorem C_ne_B : cfg.C ≠ cfg.B :=
 
 /-! ### Inscribed-angle step -/
 
-section oriented
-
-variable [Module.Oriented ℝ V (Fin 2)]
-
 theorem two_zsmul_oangle_APB_eq_two_zsmul_oangle_ACB :
     (2 : ℤ) • ∡ cfg.A cfg.P cfg.B = (2 : ℤ) • ∡ cfg.A cfg.C cfg.B := by
   have hAPCB : Cospherical ({cfg.A, cfg.P, cfg.C, cfg.B} : Set Pt) := by
@@ -171,8 +168,6 @@ theorem angle_APB_eq_angle_ACB : ∠ cfg.A cfg.P cfg.B = ∠ cfg.A cfg.C cfg.B :
   have h2 : ∠ cfg.A cfg.C cfg.B = |(∡ cfg.A cfg.C cfg.B).toReal| :=
     angle_eq_abs_oangle_toReal cfg.C_ne_A.symm cfg.C_ne_B.symm
   simp [h1, h2, cfg.oangle_APB_eq_oangle_ACB]
-
-end oriented
 
 /-! ### Similarity chain -/
 
@@ -248,6 +243,8 @@ theorem PB_eq_two_mul_PD : dist cfg.P cfg.B = 2 * dist cfg.P cfg.D := by
 
 theorem result : dist cfg.P cfg.B = 2 * dist cfg.P cfg.D :=
   cfg.PB_eq_two_mul_PD
+
+end oriented
 
 end Cfg
 
