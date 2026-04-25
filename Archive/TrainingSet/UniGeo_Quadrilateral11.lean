@@ -28,4 +28,13 @@ theorem result
     (uv_eq_su : dist u v = dist s u)
     (sut_eq_vut : ∠ s u t = ∠ v u t) :
     dist s t = dist t v := by
-  sorry
+  let _ := STVU
+  let _ := s_def
+  let _ := t_def
+  let _ := v_def
+  let _ := u_def
+  have h_su_eq_vu : dist s u = dist v u := by
+    simpa [dist_comm] using uv_eq_su.symm
+  have h_congr : ![s, u, t] ≅ ![v, u, t] :=
+    EuclideanGeometry.side_angle_side sut_eq_vut h_su_eq_vu rfl
+  simpa [dist_comm] using h_congr.dist_eq 0 2
