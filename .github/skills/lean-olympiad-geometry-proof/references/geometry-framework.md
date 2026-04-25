@@ -56,3 +56,8 @@ For a well-structured geometry file, the order usually looks like this:
 ## Reuse Across Problems
 
 This framework is intended for future geometry problems, including IMO-style angle chase and ratio problems, as well as any planar Euclidean proof that naturally breaks into cyclicity, similarity, and distance algebra.
+
+
+## 其他注释
+- 内积表示使用 `inner ℝ a b` , namespace: `open InnerProductGeometry`
+- 对于一些条件已经满足的goal，但是直接rw或者使用不过，可以尝试使用`grind`命令进行自动搜索。如果包含角度comm可以使用`grind [angle_comm]`

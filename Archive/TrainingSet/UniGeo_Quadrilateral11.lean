@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Wang Ying
 -/
 import Mathlib
-import EuclideanGeometry.Definition.Polygon
+import Mathlib.EG.Polygon
 
 open scoped Real EuclideanGeometry Similar Congruent InnerProductSpace
 open Affine EuclideanGeometry Module AffineSubspace InnerProductSpace
@@ -19,13 +19,13 @@ In quadrilateral STVU, where length UV equals length SU, and angle SUT equals
 angle VUT, prove that length ST equals length TV.
 -/
 theorem result
-    (S T V U : Pt)
+    (s t v u : Pt)
     (STVU : Polygon Pt 4)
-    (S_def : S = STVU 0)
-    (T_def : T = STVU 1)
-    (V_def : V = STVU 2)
-    (U_def : U = STVU 3)
-    (UV_eq_SU : dist U V = dist S U)
-    (SUT_eq_VUT : ∠ S U T = ∠ V U T) :
-    dist S T = dist T V := by
+    (s_def : s = STVU 0)
+    (t_def : t = STVU 1)
+    (v_def : v = STVU 2)
+    (u_def : u = STVU 3)
+    (uv_eq_su : dist u v = dist s u)
+    (sut_eq_vut : ∠ s u t = ∠ v u t) :
+    dist s t = dist t v := by
   sorry
